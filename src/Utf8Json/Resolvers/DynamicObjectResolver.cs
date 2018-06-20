@@ -1012,7 +1012,7 @@ namespace Spreads.Serialization.Utf8Json.Resolvers.Internal
                 il.Emit(OpCodes.Ldelem_Ref);
 #if NETSTANDARD
                 // same as in constructor
-                byte[] rawField;
+                byte[] rawField = Array.Empty<byte>();
                 if (excludeNull || hasShouldSerialize)
                 {
                     rawField = JsonWriter.GetEncodedPropertyName(item.Name);

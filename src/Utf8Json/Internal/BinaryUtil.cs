@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 
 #if NETSTANDARD
@@ -19,12 +20,7 @@ namespace Spreads.Serialization.Utf8Json.Internal
         {
             var newLength = offset + appendLength;
 
-            // If null(most case fisrt time) fill byte.
-            if (bytes == null)
-            {
-                bytes = new byte[newLength];
-                return;
-            }
+            Debug.Assert(bytes != null);
 
             // like MemoryStream.EnsureCapacity
             var current = bytes.Length;
@@ -82,7 +78,7 @@ namespace Spreads.Serialization.Utf8Json.Internal
             if (newSize < 0) throw new ArgumentOutOfRangeException("newSize");
 
             byte[] array2 = array;
-            if (array2 == null)
+            if (array2 == null || array2.Length == 0)
             {
                 array = new byte[newSize];
                 return;

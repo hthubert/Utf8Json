@@ -25,7 +25,7 @@ namespace Spreads.Serialization.Utf8Json
     {
         public static string ToJsonString<T>(this IJsonFormatter<T> formatter, T value, IJsonFormatterResolver formatterResolver)
         {
-            var writer = new JsonWriter();
+            var writer = new JsonWriter(Array.Empty<byte>());
             formatter.Serialize(ref writer, value, formatterResolver);
             return writer.ToString();
         }

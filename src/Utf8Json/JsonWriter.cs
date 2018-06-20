@@ -44,14 +44,14 @@ namespace Spreads.Serialization.Utf8Json
 
         public static byte[] GetEncodedPropertyName(string propertyName)
         {
-            var writer = new JsonWriter();
+            var writer = new JsonWriter(Array.Empty<byte>());
             writer.WritePropertyName(propertyName);
             return writer.ToUtf8ByteArray();
         }
 
         public static byte[] GetEncodedPropertyNameWithPrefixValueSeparator(string propertyName)
         {
-            var writer = new JsonWriter();
+            var writer = new JsonWriter(Array.Empty<byte>());
             writer.WriteValueSeparator();
             writer.WritePropertyName(propertyName);
             return writer.ToUtf8ByteArray();
@@ -59,7 +59,7 @@ namespace Spreads.Serialization.Utf8Json
 
         public static byte[] GetEncodedPropertyNameWithBeginObject(string propertyName)
         {
-            var writer = new JsonWriter();
+            var writer = new JsonWriter(Array.Empty<byte>());
             writer.WriteBeginObject();
             writer.WritePropertyName(propertyName);
             return writer.ToUtf8ByteArray();
@@ -67,7 +67,7 @@ namespace Spreads.Serialization.Utf8Json
 
         public static byte[] GetEncodedPropertyNameWithoutQuotation(string propertyName)
         {
-            var writer = new JsonWriter();
+            var writer = new JsonWriter(Array.Empty<byte>());
             writer.WriteString(propertyName); // "propname"
             var buf = writer.GetBuffer();
             if (buf.Count == 2)
