@@ -784,57 +784,57 @@ namespace Spreads.Serialization.Utf8Json
 #endif
         void ReadNextCore(JsonToken token)
         {
-            switch (token)
+            if (token == JsonToken.BeginObject || token == JsonToken.BeginArray || token == JsonToken.ValueSeparator ||
+                token == JsonToken.NameSeparator || token == JsonToken.EndObject || token == JsonToken.EndArray)
             {
-                case JsonToken.BeginObject:
-                case JsonToken.BeginArray:
-                case JsonToken.ValueSeparator:
-                case JsonToken.NameSeparator:
-                case JsonToken.EndObject:
-                case JsonToken.EndArray:
-                    offset += 1;
-                    break;
-                case JsonToken.True:
-                case JsonToken.Null:
-                    offset += 4;
-                    break;
-                case JsonToken.False:
-                    offset += 5;
-                    break;
-                case JsonToken.String:
-                    offset += 1; // position is "\"";
-                    for (int i = offset; i < bytes.Length; i++)
+                offset += 1;
+            }
+            
+            else if (token == JsonToken.String)
+            {
+                offset += 1; // position is "\"";
+                for (int i = offset; i < bytes.Length; i++)
+                {
+                    if (bytes[i] == (char) '\"')
                     {
-                        if (bytes[i] == (char)'\"')
+                        // is escape?
+                        if (bytes[i - 1] == (char) '\\')
                         {
-                            // is escape?
-                            if (bytes[i - 1] == (char)'\\')
-                            {
-                                continue;
-                            }
-                            else
-                            {
-                                offset = i + 1;
-                                return; // end
-                            }
+                            continue;
+                        }
+                        else
+                        {
+                            offset = i + 1;
+                            return; // end
                         }
                     }
-                    CreateParsingExceptionMessage("not found end string.");
-                    break;
-                case JsonToken.Number:
-                    for (int i = offset; i < bytes.Length; i++)
+                }
+
+                CreateParsingExceptionMessage("not found end string.");
+            }
+            else if (token == JsonToken.Number)
+            {
+                for (int i = offset; i < bytes.Length; i++)
+                {
+                    if (IsWordBreak(bytes[i]))
                     {
-                        if (IsWordBreak(bytes[i]))
-                        {
-                            offset = i;
-                            return;
-                        }
+                        offset = i;
+                        return;
                     }
-                    offset = bytes.Length;
-                    break;
-                case JsonToken.None:
-                default:
-                    break;
+                }
+
+                offset = bytes.Length;
+            }
+            else if (token == JsonToken.True || token == JsonToken.Null)
+            {
+                offset += 4;
+            }
+            else if (token == JsonToken.False)
+            {
+                offset += 5;
+            }
+            else
+            {
             }
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -842,31 +842,13 @@ namespace Spreads.Serialization.Utf8Json
         {
             var stack = 0;
 
-            AGAIN:
-            var token = GetCurrentJsonToken();
-            switch (token)
+            while (true)
             {
-                case JsonToken.BeginObject:
-                case JsonToken.BeginArray:
-                    offset++;
-                    stack++;
-                    goto AGAIN;
-                case JsonToken.EndObject:
-                case JsonToken.EndArray:
-                    offset++;
-                    stack--;
-                    if (stack != 0)
-                    {
-                        goto AGAIN;
-                    }
-                    break;
-                case JsonToken.True:
-                case JsonToken.False:
-                case JsonToken.Null:
-                case JsonToken.String:
-                case JsonToken.Number:
-                case JsonToken.NameSeparator:
-                case JsonToken.ValueSeparator:
+                var token = GetCurrentJsonToken();
+                if (token == JsonToken.String || token == JsonToken.Number || token == JsonToken.NameSeparator ||
+                    token == JsonToken.ValueSeparator || token == JsonToken.True || token == JsonToken.False || token == JsonToken.Null
+                    )
+                {
                     do
                     {
                         ReadNextCore(token);
@@ -875,12 +857,26 @@ namespace Spreads.Serialization.Utf8Json
 
                     if (stack != 0)
                     {
-                        goto AGAIN;
+                        continue;
                     }
-                    break;
-                case JsonToken.None:
-                default:
-                    break;
+                }
+                else if (token == JsonToken.BeginObject || token == JsonToken.BeginArray)
+                {
+                    offset++;
+                    stack++;
+                    continue;
+                }
+                else if (token == JsonToken.EndObject || token == JsonToken.EndArray)
+                {
+                    offset++;
+                    stack--;
+                    if (stack != 0)
+                    {
+                        continue;
+                    }
+                }
+
+                break;
             }
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
