@@ -1,7 +1,7 @@
 ﻿
 using System;
 
-namespace Utf8Json.Formatters
+namespace Spreads.Serialization.Utf8Json.Formatters
 {
     public sealed class NullableFormatter<T> : IJsonFormatter<T?>
         where T : struct

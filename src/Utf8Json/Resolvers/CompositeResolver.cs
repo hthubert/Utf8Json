@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Reflection;
 using System.Reflection.Emit;
-using Utf8Json.Internal.Emit;
+using Spreads.Serialization.Utf8Json.Internal.Emit;
 
-namespace Utf8Json.Resolvers
+namespace Spreads.Serialization.Utf8Json.Resolvers
 {
     public sealed class CompositeResolver : IJsonFormatterResolver
     {
@@ -123,7 +123,7 @@ namespace Utf8Json.Resolvers
 
     public abstract class DynamicCompositeResolver : IJsonFormatterResolver
     {
-        const string ModuleName = "Utf8Json.Resolvers.DynamicCompositeResolver";
+        const string ModuleName = "Spreads.Serialization.Utf8Json.Resolvers.DynamicCompositeResolver";
 
         static readonly DynamicAssembly assembly;
 

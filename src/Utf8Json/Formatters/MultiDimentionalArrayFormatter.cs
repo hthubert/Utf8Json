@@ -1,6 +1,6 @@
-﻿using Utf8Json.Internal;
+﻿using Spreads.Serialization.Utf8Json.Internal;
 
-namespace Utf8Json.Formatters
+namespace Spreads.Serialization.Utf8Json.Formatters
 {
     // multi dimentional array serialize to [[seq], [seq]]
 

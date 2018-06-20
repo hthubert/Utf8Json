@@ -2,9 +2,9 @@
 using System.Reflection;
 using System.Collections.Generic;
 using System.Text;
-using Utf8Json.Internal;
+using Spreads.Serialization.Utf8Json.Internal;
 
-namespace Utf8Json.Resolvers
+namespace Spreads.Serialization.Utf8Json.Resolvers
 {
     /// <summary>
     /// Get formatter from [JsonFormatter] attribute.

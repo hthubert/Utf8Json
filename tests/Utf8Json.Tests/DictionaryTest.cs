@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using Xunit;
 
 
-namespace Utf8Json.Tests
+namespace Spreads.Serialization.Utf8Json.Tests
 {
     public class DictionaryTest
     {

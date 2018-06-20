@@ -6,7 +6,7 @@ using System.Reflection.Emit;
 using System.Text;
 using System.Runtime.Serialization;
 
-namespace Utf8Json.Internal.Emit
+namespace Spreads.Serialization.Utf8Json.Internal.Emit
 {
     internal class MetaMember
     {

@@ -1,8 +1,8 @@
 ﻿using System.Linq;
-using Utf8Json.Formatters;
-using Utf8Json.Resolvers.Internal;
+using Spreads.Serialization.Utf8Json.Formatters;
+using Spreads.Serialization.Utf8Json.Resolvers.Internal;
 
-namespace Utf8Json.Resolvers
+namespace Spreads.Serialization.Utf8Json.Resolvers
 {
     public static class StandardResolver
     {
@@ -34,7 +34,7 @@ namespace Utf8Json.Resolvers
     }
 }
 
-namespace Utf8Json.Resolvers.Internal
+namespace Spreads.Serialization.Utf8Json.Resolvers.Internal
 {
     internal static class StandardResolverHelper
     {

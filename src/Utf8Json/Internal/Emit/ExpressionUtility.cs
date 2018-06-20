@@ -2,7 +2,7 @@
 using System.Linq.Expressions;
 using System.Reflection;
 
-namespace Utf8Json.Internal.Emit
+namespace Spreads.Serialization.Utf8Json.Internal.Emit
 {
     internal static class ExpressionUtility
     {

@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Runtime.Serialization;
 
-namespace Utf8Json.Internal.Emit
+namespace Spreads.Serialization.Utf8Json.Internal.Emit
 {
     internal class MetaType
     {

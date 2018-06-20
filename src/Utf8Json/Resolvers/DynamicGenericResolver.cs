@@ -1,18 +1,18 @@
 ﻿using System.Reflection;
 using System.Collections;
 using System.Linq;
-using Utf8Json.Internal;
+using Spreads.Serialization.Utf8Json.Internal;
 using System;
-using Utf8Json.Formatters;
+using Spreads.Serialization.Utf8Json.Formatters;
 using System.Collections.Generic;
-using Utf8Json.Resolvers.Internal;
+using Spreads.Serialization.Utf8Json.Resolvers.Internal;
 using System.Collections.ObjectModel;
 
 #if NETSTANDARD
 using System.Threading.Tasks;
 #endif
 
-namespace Utf8Json.Resolvers
+namespace Spreads.Serialization.Utf8Json.Resolvers
 {
     public sealed class DynamicGenericResolver : IJsonFormatterResolver
     {
@@ -40,7 +40,7 @@ namespace Utf8Json.Resolvers
     }
 }
 
-namespace Utf8Json.Resolvers.Internal
+namespace Spreads.Serialization.Utf8Json.Resolvers.Internal
 {
     internal static class DynamicGenericResolverGetFormatterHelper
     {

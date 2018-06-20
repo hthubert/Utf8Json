@@ -4,7 +4,7 @@ using System.Text;
 using System.Linq;
 using Xunit;
 
-namespace Utf8Json.Tests
+namespace Spreads.Serialization.Utf8Json.Tests
 {
     public class WithBomTest
     {

@@ -5,9 +5,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using Xunit;
-using Utf8Json.Resolvers;
+using Spreads.Serialization.Utf8Json.Resolvers;
 
-namespace Utf8Json.Tests
+namespace Spreads.Serialization.Utf8Json.Tests
 {
     public class NonGenericTest
     {

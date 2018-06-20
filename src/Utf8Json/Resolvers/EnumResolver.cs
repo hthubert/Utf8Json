@@ -1,13 +1,13 @@
 ﻿using System;
-using Utf8Json.Internal.Emit;
-using Utf8Json.Internal;
+using Spreads.Serialization.Utf8Json.Internal.Emit;
+using Spreads.Serialization.Utf8Json.Internal;
 using System.Reflection;
 using System.Collections.Generic;
 using System.Text;
-using Utf8Json.Formatters;
-using Utf8Json.Resolvers.Internal;
+using Spreads.Serialization.Utf8Json.Formatters;
+using Spreads.Serialization.Utf8Json.Resolvers.Internal;
 
-namespace Utf8Json.Resolvers
+namespace Spreads.Serialization.Utf8Json.Resolvers
 {
     public static class EnumResolver
     {
@@ -18,7 +18,7 @@ namespace Utf8Json.Resolvers
     }
 }
 
-namespace Utf8Json.Resolvers.Internal
+namespace Spreads.Serialization.Utf8Json.Resolvers.Internal
 {
     internal sealed class EnumDefaultResolver : IJsonFormatterResolver
     {

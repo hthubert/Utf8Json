@@ -3,10 +3,10 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
-using Utf8Json.Internal;
-using Utf8Json.Internal.Emit;
+using Spreads.Serialization.Utf8Json.Internal;
+using Spreads.Serialization.Utf8Json.Internal.Emit;
 
-namespace Utf8Json
+namespace Spreads.Serialization.Utf8Json
 {
     // NonGeneric API
     public static partial class JsonSerializer

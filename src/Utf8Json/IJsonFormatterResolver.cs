@@ -2,7 +2,7 @@
 using System.Reflection;
 using System.Runtime.CompilerServices;
 
-namespace Utf8Json
+namespace Spreads.Serialization.Utf8Json
 {
     public interface IJsonFormatterResolver
     {

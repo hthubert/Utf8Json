@@ -3,10 +3,10 @@ using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
-using Utf8Json.Internal;
-using Utf8Json.Resolvers;
+using Spreads.Serialization.Utf8Json.Internal;
+using Spreads.Serialization.Utf8Json.Resolvers;
 
-namespace Utf8Json
+namespace Spreads.Serialization.Utf8Json
 {
     /// <summary>
     /// High-Level API of Utf8Json.

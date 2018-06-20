@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 
-namespace Utf8Json.Internal
+namespace Spreads.Serialization.Utf8Json.Internal
 {
     [StructLayout(LayoutKind.Explicit, Pack = 1)]
     internal struct GuidBits

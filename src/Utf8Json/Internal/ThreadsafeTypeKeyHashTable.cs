@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Utf8Json.Internal
+namespace Spreads.Serialization.Utf8Json.Internal
 {
     // Safe for multiple-read, single-write.
     internal class ThreadsafeTypeKeyHashTable<TValue>

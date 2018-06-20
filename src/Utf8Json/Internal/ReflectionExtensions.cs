@@ -4,7 +4,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
 
-namespace Utf8Json.Internal
+namespace Spreads.Serialization.Utf8Json.Internal
 {
     internal static class ReflectionExtensions
     {

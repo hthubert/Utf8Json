@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using Utf8Json.Formatters;
-using Utf8Json.Resolvers;
+using Spreads.Serialization.Utf8Json.Formatters;
+using Spreads.Serialization.Utf8Json.Resolvers;
 using Xunit;
 
-namespace Utf8Json.Tests
+namespace Spreads.Serialization.Utf8Json.Tests
 {
     public class CompositeResolverTest
     {

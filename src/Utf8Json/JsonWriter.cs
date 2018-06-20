@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Text;
-using Utf8Json.Internal;
+using Spreads.Serialization.Utf8Json.Internal;
 
 #if NETSTANDARD
 
@@ -8,7 +8,7 @@ using System.Runtime.CompilerServices;
 
 #endif
 
-namespace Utf8Json
+namespace Spreads.Serialization.Utf8Json
 {
     // JSON RFC: https://www.ietf.org/rfc/rfc4627.txt
 

@@ -2,7 +2,7 @@
 
 using System;
 
-namespace Utf8Json.Internal
+namespace Spreads.Serialization.Utf8Json.Internal
 {
     // Unity compiler can't understand this.
 

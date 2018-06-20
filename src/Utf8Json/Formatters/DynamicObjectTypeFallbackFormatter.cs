@@ -2,10 +2,10 @@
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
-using Utf8Json.Internal;
-using Utf8Json.Internal.Emit;
+using Spreads.Serialization.Utf8Json.Internal;
+using Spreads.Serialization.Utf8Json.Internal.Emit;
 
-namespace Utf8Json.Formatters
+namespace Spreads.Serialization.Utf8Json.Formatters
 {
     public sealed class DynamicObjectTypeFallbackFormatter : IJsonFormatter<object>
     {

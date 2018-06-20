@@ -6,7 +6,7 @@ using System.Reflection.Emit;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace Utf8Json.Internal
+namespace Spreads.Serialization.Utf8Json.Internal
 {
     internal class ILStreamReader : BinaryReader
     {

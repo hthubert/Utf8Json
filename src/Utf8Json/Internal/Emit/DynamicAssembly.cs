@@ -2,7 +2,7 @@
 using System.Reflection;
 using System.Reflection.Emit;
 
-namespace Utf8Json.Internal.Emit
+namespace Spreads.Serialization.Utf8Json.Internal.Emit
 {
     internal class DynamicAssembly
     {

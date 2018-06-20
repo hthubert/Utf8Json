@@ -2,11 +2,11 @@
 using Xunit;
 using System.Collections.Generic;
 using System.Text;
-using Utf8Json.Formatters;
+using Spreads.Serialization.Utf8Json.Formatters;
 using Newtonsoft.Json;
 using System.Runtime.Serialization;
 
-namespace Utf8Json.Tests
+namespace Spreads.Serialization.Utf8Json.Tests
 {
     public class ToaruClass
     {

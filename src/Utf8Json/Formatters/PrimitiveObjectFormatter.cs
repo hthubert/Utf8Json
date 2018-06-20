@@ -2,7 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 
-namespace Utf8Json.Formatters
+namespace Spreads.Serialization.Utf8Json.Formatters
 {
     public sealed class PrimitiveObjectFormatter : IJsonFormatter<object>
     {

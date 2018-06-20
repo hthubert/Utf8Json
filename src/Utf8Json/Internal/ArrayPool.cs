@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Utf8Json.Internal
+namespace Spreads.Serialization.Utf8Json.Internal
 {
     internal sealed class BufferPool : ArrayPool<byte>
     {

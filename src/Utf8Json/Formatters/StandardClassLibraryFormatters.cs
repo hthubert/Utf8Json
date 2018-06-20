@@ -4,8 +4,8 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Text;
-using Utf8Json.Formatters.Internal;
-using Utf8Json.Internal;
+using Spreads.Serialization.Utf8Json.Formatters.Internal;
+using Spreads.Serialization.Utf8Json.Internal;
 using System.Text.RegularExpressions;
 
 #if NETSTANDARD
@@ -16,7 +16,7 @@ using System.Threading.Tasks;
 
 #endif
 
-namespace Utf8Json.Formatters
+namespace Spreads.Serialization.Utf8Json.Formatters
 {
     // MEMO:should write/read base64 directly like corefxlab/System.Binary.Base64
     // https://github.com/dotnet/corefxlab/tree/master/src/System.Binary.Base64/System/Binary
@@ -697,7 +697,7 @@ namespace Utf8Json.Formatters
 #endif
 }
 
-namespace Utf8Json.Formatters.Internal
+namespace Spreads.Serialization.Utf8Json.Formatters.Internal
 {
     internal static class StandardClassLibraryFormatterHelper
     {

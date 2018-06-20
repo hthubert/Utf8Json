@@ -1,10 +1,10 @@
 ﻿#if NETSTANDARD
 
 using System;
-using Utf8Json.Internal;
-using Utf8Json.Formatters.Internal;
+using Spreads.Serialization.Utf8Json.Internal;
+using Spreads.Serialization.Utf8Json.Formatters.Internal;
 
-namespace Utf8Json.Formatters.Internal
+namespace Spreads.Serialization.Utf8Json.Formatters.Internal
 {
     // reduce static constructor generate size on generics(especially IL2CPP on Unity)
     internal static class TupleFormatterHelper
@@ -152,7 +152,7 @@ namespace Utf8Json.Formatters.Internal
     }
 }
 
-namespace Utf8Json.Formatters
+namespace Spreads.Serialization.Utf8Json.Formatters
 {
 
     public sealed class TupleFormatter<T1> : IJsonFormatter<Tuple<T1>>

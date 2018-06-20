@@ -2,7 +2,7 @@
 using System.Globalization;
 using System.Runtime.CompilerServices;
 
-namespace Utf8Json.Internal.DoubleConversion
+namespace Spreads.Serialization.Utf8Json.Internal.DoubleConversion
 {
     using uint32_t = System.UInt32;
     using uint64_t = System.UInt64;

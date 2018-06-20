@@ -3,14 +3,14 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using Utf8Json.Formatters.Internal;
-using Utf8Json.Internal;
+using Spreads.Serialization.Utf8Json.Formatters.Internal;
+using Spreads.Serialization.Utf8Json.Internal;
 
 #if NETSTANDARD
 using System.Collections.Concurrent;
 #endif
 
-namespace Utf8Json.Formatters
+namespace Spreads.Serialization.Utf8Json.Formatters
 {
     public class ArrayFormatter<T> : IJsonFormatter<T[]>
     {
@@ -953,7 +953,7 @@ namespace Utf8Json.Formatters
 }
 
 
-namespace Utf8Json.Formatters.Internal
+namespace Spreads.Serialization.Utf8Json.Formatters.Internal
 {
     internal static class CollectionFormatterHelper
     {

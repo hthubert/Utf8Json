@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Utf8Json.Formatters
+namespace Spreads.Serialization.Utf8Json.Formatters
 {
     public sealed class AnonymousFormatter<T> : IJsonFormatter<T>
     {

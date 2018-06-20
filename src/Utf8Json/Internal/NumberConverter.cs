@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using Utf8Json.Internal.DoubleConversion;
+using Spreads.Serialization.Utf8Json.Internal.DoubleConversion;
 
 #if NETSTANDARD
 using System.Runtime.CompilerServices;
 #endif
 
-namespace Utf8Json.Internal
+namespace Spreads.Serialization.Utf8Json.Internal
 {
     /// <summary>
     /// zero-allocate itoa, dtoa, atoi, atod converters.

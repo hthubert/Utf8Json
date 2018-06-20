@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Text;
 
-namespace Utf8Json.Internal.DoubleConversion
+namespace Spreads.Serialization.Utf8Json.Internal.DoubleConversion
 {
     using uint64_t = UInt64;
     using int16_t = Int16;

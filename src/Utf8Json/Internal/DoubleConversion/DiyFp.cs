@@ -1,6 +1,6 @@
 ﻿using System.Runtime.CompilerServices;
 
-namespace Utf8Json.Internal.DoubleConversion
+namespace Spreads.Serialization.Utf8Json.Internal.DoubleConversion
 {
     // https://github.com/google/double-conversion/blob/master/double-conversion/diy-fp.cc
     // https://github.com/google/double-conversion/blob/master/double-conversion/diy-fp.h

@@ -2,11 +2,11 @@
 using System.Linq;
 using System.Collections.Generic;
 using System.Text;
-using Utf8Json.Internal.DoubleConversion;
+using Spreads.Serialization.Utf8Json.Internal.DoubleConversion;
 using Xunit;
-using Utf8Json.Internal;
+using Spreads.Serialization.Utf8Json.Internal;
 
-namespace Utf8Json.Tests
+namespace Spreads.Serialization.Utf8Json.Tests
 {
     public class DoubleConversionTest
     {

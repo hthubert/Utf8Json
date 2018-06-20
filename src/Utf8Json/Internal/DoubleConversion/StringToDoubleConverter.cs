@@ -2,7 +2,7 @@
 using System.Runtime.CompilerServices;
 using System.Text;
 
-namespace Utf8Json.Internal.DoubleConversion
+namespace Spreads.Serialization.Utf8Json.Internal.DoubleConversion
 {
 #pragma warning disable 660
 #pragma warning disable 661

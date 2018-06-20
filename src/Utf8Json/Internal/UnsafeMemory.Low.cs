@@ -2,7 +2,7 @@
 
 using System.Runtime.CompilerServices;
 
-namespace Utf8Json.Internal
+namespace Spreads.Serialization.Utf8Json.Internal
 {
     // for string key property name write optimization.
 

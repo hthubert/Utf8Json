@@ -6,7 +6,7 @@ using System.Text;
 using System.Runtime.CompilerServices;
 #endif
 
-namespace Utf8Json.Internal
+namespace Spreads.Serialization.Utf8Json.Internal
 {
     public static class BinaryUtil
     {

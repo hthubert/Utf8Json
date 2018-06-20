@@ -1,8 +1,8 @@
 ﻿using System;
-using Utf8Json.Internal;
+using Spreads.Serialization.Utf8Json.Internal;
 using Xunit;
 
-namespace Utf8Json.Tests
+namespace Spreads.Serialization.Utf8Json.Tests
 {
     public class ReadNextBlockSegmentTest
     {

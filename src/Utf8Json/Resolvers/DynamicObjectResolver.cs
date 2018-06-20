@@ -2,15 +2,15 @@
 using System.Linq;
 using System.Reflection;
 using System.Collections.Generic;
-using Utf8Json.Internal.Emit;
-using Utf8Json.Internal;
-using Utf8Json.Formatters;
+using Spreads.Serialization.Utf8Json.Internal.Emit;
+using Spreads.Serialization.Utf8Json.Internal;
+using Spreads.Serialization.Utf8Json.Formatters;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Reflection.Emit;
-using Utf8Json.Resolvers.Internal;
+using Spreads.Serialization.Utf8Json.Resolvers.Internal;
 
-namespace Utf8Json.Resolvers
+namespace Spreads.Serialization.Utf8Json.Resolvers
 {
     /// <summary>
     /// ObjectResolver by dynamic code generation.
@@ -45,7 +45,7 @@ namespace Utf8Json.Resolvers
     }
 }
 
-namespace Utf8Json.Resolvers.Internal
+namespace Spreads.Serialization.Utf8Json.Resolvers.Internal
 {
 #if DEBUG && (NET45 || NET47)
     public interface ISave
@@ -65,7 +65,7 @@ namespace Utf8Json.Resolvers.Internal
         public static readonly IJsonFormatterResolver Instance = new DynamicObjectResolverAllowPrivateFalseExcludeNullFalseNameMutateOriginal();
         static readonly Func<string, string> nameMutator = StringMutator.Original;
         static readonly bool excludeNull = false;
-        const string ModuleName = "Utf8Json.Resolvers.DynamicObjectResolverAllowPrivateFalseExcludeNullFalseNameMutateOriginal";
+        const string ModuleName = "Spreads.Serialization.Utf8Json.Resolvers.DynamicObjectResolverAllowPrivateFalseExcludeNullFalseNameMutateOriginal";
 
         static readonly DynamicAssembly assembly;
 
@@ -110,7 +110,7 @@ namespace Utf8Json.Resolvers.Internal
         public static readonly IJsonFormatterResolver Instance = new DynamicObjectResolverAllowPrivateFalseExcludeNullFalseNameMutateCamelCase();
         static readonly Func<string, string> nameMutator = StringMutator.ToCamelCase;
         static readonly bool excludeNull = false;
-        const string ModuleName = "Utf8Json.Resolvers.DynamicObjectResolverAllowPrivateFalseExcludeNullFalseNameMutateCamelCase";
+        const string ModuleName = "Spreads.Serialization.Utf8Json.Resolvers.DynamicObjectResolverAllowPrivateFalseExcludeNullFalseNameMutateCamelCase";
 
         static readonly DynamicAssembly assembly;
 
@@ -155,7 +155,7 @@ namespace Utf8Json.Resolvers.Internal
         public static readonly IJsonFormatterResolver Instance = new DynamicObjectResolverAllowPrivateFalseExcludeNullFalseNameMutateSnakeCase();
         static readonly Func<string, string> nameMutator = StringMutator.ToSnakeCase;
         static readonly bool excludeNull = false;
-        const string ModuleName = "Utf8Json.Resolvers.DynamicObjectResolverAllowPrivateFalseExcludeNullFalseNameMutateSnakeCase";
+        const string ModuleName = "Spreads.Serialization.Utf8Json.Resolvers.DynamicObjectResolverAllowPrivateFalseExcludeNullFalseNameMutateSnakeCase";
 
         static readonly DynamicAssembly assembly;
 
@@ -200,7 +200,7 @@ namespace Utf8Json.Resolvers.Internal
         public static readonly IJsonFormatterResolver Instance = new DynamicObjectResolverAllowPrivateFalseExcludeNullTrueNameMutateOriginal();
         static readonly Func<string, string> nameMutator = StringMutator.Original;
         static readonly bool excludeNull = true;
-        const string ModuleName = "Utf8Json.Resolvers.DynamicObjectResolverAllowPrivateFalseExcludeNullTrueNameMutateOriginal";
+        const string ModuleName = "Spreads.Serialization.Utf8Json.Resolvers.DynamicObjectResolverAllowPrivateFalseExcludeNullTrueNameMutateOriginal";
 
         static readonly DynamicAssembly assembly;
 
@@ -245,7 +245,7 @@ namespace Utf8Json.Resolvers.Internal
         public static readonly IJsonFormatterResolver Instance = new DynamicObjectResolverAllowPrivateFalseExcludeNullTrueNameMutateCamelCase();
         static readonly Func<string, string> nameMutator = StringMutator.ToCamelCase;
         static readonly bool excludeNull = true;
-        const string ModuleName = "Utf8Json.Resolvers.DynamicObjectResolverAllowPrivateFalseExcludeNullTrueNameMutateCamelCase";
+        const string ModuleName = "Spreads.Serialization.Utf8Json.Resolvers.DynamicObjectResolverAllowPrivateFalseExcludeNullTrueNameMutateCamelCase";
 
         static readonly DynamicAssembly assembly;
 
@@ -290,7 +290,7 @@ namespace Utf8Json.Resolvers.Internal
         public static readonly IJsonFormatterResolver Instance = new DynamicObjectResolverAllowPrivateFalseExcludeNullTrueNameMutateSnakeCase();
         static readonly Func<string, string> nameMutator = StringMutator.ToSnakeCase;
         static readonly bool excludeNull = true;
-        const string ModuleName = "Utf8Json.Resolvers.DynamicObjectResolverAllowPrivateFalseExcludeNullTrueNameMutateSnakeCase";
+        const string ModuleName = "Spreads.Serialization.Utf8Json.Resolvers.DynamicObjectResolverAllowPrivateFalseExcludeNullTrueNameMutateSnakeCase";
 
         static readonly DynamicAssembly assembly;
 
@@ -585,7 +585,7 @@ namespace Utf8Json.Resolvers.Internal
             var hasShouldSerialize = serializationInfo.Members.Any(x => x.ShouldSerializeMethodInfo != null);
 
             var formatterType = typeof(IJsonFormatter<>).MakeGenericType(type);
-            var typeBuilder = assembly.DefineType("Utf8Json.Formatters." + SubtractFullNameRegex.Replace(type.FullName, "").Replace(".", "_") + "Formatter" + Interlocked.Increment(ref nameSequence), TypeAttributes.Public | TypeAttributes.Sealed, null, new[] { formatterType });
+            var typeBuilder = assembly.DefineType("Spreads.Serialization.Utf8Json.Formatters." + SubtractFullNameRegex.Replace(type.FullName, "").Replace(".", "_") + "Formatter" + Interlocked.Increment(ref nameSequence), TypeAttributes.Public | TypeAttributes.Sealed, null, new[] { formatterType });
 
             FieldBuilder stringByteKeysField;
             Dictionary<MetaMember, FieldInfo> customFormatterLookup;

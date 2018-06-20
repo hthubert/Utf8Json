@@ -5,9 +5,9 @@ using System.Text;
 using System.Linq;
 using System.Reflection.Emit;
 using System.Reflection;
-using Utf8Json.Internal.Emit;
+using Spreads.Serialization.Utf8Json.Internal.Emit;
 
-namespace Utf8Json.Internal
+namespace Spreads.Serialization.Utf8Json.Internal
 {
     // Key = long, Value = int for UTF8String Dictionary
 
