@@ -16,9 +16,8 @@ namespace Spreads.Serialization.Utf8Json
         static readonly ArraySegment<byte> nullTokenSegment = new ArraySegment<byte>(new byte[] { 110, 117, 108, 108 }, 0, 4);
         static readonly byte[] bom = Encoding.UTF8.GetPreamble();
 
-
-        readonly byte[] bytes;
-        int offset;
+        private readonly byte[] bytes;
+        private int offset;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public JsonReader(byte[] bytes)
@@ -886,16 +885,19 @@ namespace Spreads.Serialization.Utf8Json
             ReadNextBlock();
             return new ArraySegment<byte>(bytes, startOffset, offset - startOffset);
         }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public sbyte ReadSByte()
         {
             return checked((sbyte)ReadInt64());
         }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public short ReadInt16()
         {
             return checked((short)ReadInt64());
         }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int ReadInt32()
         {

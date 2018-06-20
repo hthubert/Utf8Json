@@ -51,12 +51,12 @@ namespace Spreads.Serialization.Utf8Json.Tests
             var data2 = JsonSerializer.NonGeneric.Deserialize(t, JsonSerializer.NonGeneric.Serialize(t, data, StandardResolver.Default)) as FirstSimpleData;
 
 
-            var ms = new JsonWriter();
+            var ms = new JsonWriter(Array.Empty<byte>());
             JsonSerializer.NonGeneric.Serialize(t, ref ms, data);
             var ms2 = new JsonReader(ms.ToUtf8ByteArray());
             var data3 = JsonSerializer.NonGeneric.Deserialize(t, ref ms2) as FirstSimpleData;
 
-            ms = new JsonWriter();
+            ms = new JsonWriter(Array.Empty<byte>());
             JsonSerializer.NonGeneric.Serialize(t, ref ms, data, StandardResolver.Default);
             ms2 = new JsonReader(ms.ToUtf8ByteArray());
             var data4 = JsonSerializer.NonGeneric.Deserialize(t, ref ms2, StandardResolver.Default) as FirstSimpleData;

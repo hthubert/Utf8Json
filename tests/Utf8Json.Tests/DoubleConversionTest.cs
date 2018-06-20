@@ -21,14 +21,14 @@ namespace Spreads.Serialization.Utf8Json.Tests
 
         static string GetString(double v)
         {
-            byte[] buf = null;
+            byte[] buf = Array.Empty<byte>();
             var len = NumberConverter.WriteDouble(ref buf, 0, v);
             return Encoding.UTF8.GetString(buf, 0, len);
         }
 
         static string GetString(float v)
         {
-            byte[] buf = null;
+            byte[] buf = Array.Empty<byte>();
             var len = NumberConverter.WriteSingle(ref buf, 0, v);
             return Encoding.UTF8.GetString(buf, 0, len);
         }

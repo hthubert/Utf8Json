@@ -11,7 +11,7 @@ namespace Spreads.Serialization.Utf8Json.Tests
         [Fact]
         public void Collection()
         {
-            var jw = new JsonWriter();
+            var jw = new JsonWriter(Array.Empty<byte>());
             PrimitiveObjectFormatter.Default.Serialize(ref jw, new[] { "foo", "bar", "baz" }, null);
 
             jw.ToString().Is("[\"foo\",\"bar\",\"baz\"]");
@@ -20,7 +20,7 @@ namespace Spreads.Serialization.Utf8Json.Tests
         [Fact]
         public void Map()
         {
-            var jw = new JsonWriter();
+            var jw = new JsonWriter(Array.Empty<byte>());
             PrimitiveObjectFormatter.Default.Serialize(ref jw, new Dictionary<string, int> { { "foo", 10 }, { "bar", 99 }, { "baz", 100 } }, null);
 
             jw.ToString().Is("{\"foo\":10,\"bar\":99,\"baz\":100}");

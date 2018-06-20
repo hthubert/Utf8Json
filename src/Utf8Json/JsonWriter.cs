@@ -16,18 +16,16 @@ namespace Spreads.Serialization.Utf8Json
     {
         private static readonly byte[] emptyBytes = new byte[0];
 
-        // write direct from UnsafeMemory
-#if NETSTANDARD
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void WriteRaw(ref JsonWriter writer, byte[] src)
+        {
+            BinaryUtil.EnsureCapacity(ref writer.buffer, writer.offset, src.Length);
+            if (src.Length > 0) { Unsafe.CopyBlockUnaligned(ref writer.buffer[writer.offset], ref src[0], (uint)src.Length); }
+            writer.offset += src.Length;
+        }
 
-        internal
-#endif
-        byte[] buffer;
-
-#if NETSTANDARD
-
-        internal
-#endif
-        int offset;
+        private byte[] buffer;
+        private int offset;
 
         public int CurrentOffset
         {
@@ -128,7 +126,7 @@ namespace Spreads.Serialization.Utf8Json
 #endif
         public void WriteRaw(byte[] rawValue)
         {
-            UnsafeMemory.WriteRaw(ref this, rawValue);
+            WriteRaw(ref this, rawValue);
         }
 
 #if NETSTANDARD
