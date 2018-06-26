@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 
 namespace Spreads.Serialization.Utf8Json.Internal
 {
@@ -15,19 +16,25 @@ namespace Spreads.Serialization.Utf8Json.Internal
     internal class ArrayPool<T>
     {
         readonly int bufferLength;
+#if !SPREADS
         readonly object gate;
         int index;
         T[][] buffers;
+#endif
 
         public ArrayPool(int bufferLength)
         {
             this.bufferLength = bufferLength;
+#if !SPREADS
             this.buffers = new T[4][];
             this.gate = new object();
+#endif
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T[] Rent()
         {
+#if !SPREADS
             lock (gate)
             {
                 if (index >= buffers.Length)
@@ -46,10 +53,15 @@ namespace Spreads.Serialization.Utf8Json.Internal
 
                 return buffer;
             }
+#else
+            return Buffers.BufferPool<T>.Rent(bufferLength);
+#endif
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Return(T[] array)
         {
+#if !SPREADS
             if (array.Length != bufferLength)
             {
                 throw new InvalidOperationException("return buffer is not from pool");
@@ -62,6 +74,9 @@ namespace Spreads.Serialization.Utf8Json.Internal
                     buffers[--index] = array;
                 }
             }
+#else
+            Buffers.BufferPool<T>.Return(array);
+#endif
         }
     }
 }

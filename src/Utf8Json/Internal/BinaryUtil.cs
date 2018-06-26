@@ -75,19 +75,40 @@ namespace Spreads.Serialization.Utf8Json.Internal
 #endif
         public static void FastResize(ref byte[] array, int newSize)
         {
-            if (newSize < 0) throw new ArgumentOutOfRangeException("newSize");
+            if (newSize < 0)
+            {
+#if SPREADS
+                ThrowHelper.ThrowArgumentOutOfRangeException(nameof(newSize));
+#else
+                throw new ArgumentOutOfRangeException("newSize");
+#endif
+            }
 
             byte[] array2 = array;
             if (array2 == null || array2.Length == 0)
             {
+#if SPREADS
+                array = Buffers.BufferPool<byte>.Rent(newSize);
+#else
                 array = new byte[newSize];
+#endif
                 return;
             }
 
             if (array2.Length != newSize)
             {
+#if SPREADS
+                byte[] array3 = Buffers.BufferPool<byte>.Rent(newSize);
+#else
                 byte[] array3 = new byte[newSize];
+#endif
                 Unsafe.CopyBlockUnaligned(ref array3[0], ref array2[0], (uint)((array2.Length > newSize) ? newSize : array2.Length));
+#if SPREADS
+                if (array2 != Buffers.BufferPool.StaticBuffer.Array)
+                {
+                    Buffers.BufferPool<byte>.Return(array2);
+                }
+#endif
                 array = array3;
             }
         }

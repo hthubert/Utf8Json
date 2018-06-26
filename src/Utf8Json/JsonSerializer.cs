@@ -3,8 +3,11 @@ using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
+using Spreads.Buffers;
+using Spreads.DataTypes;
 using Spreads.Serialization.Utf8Json.Internal;
 using Spreads.Serialization.Utf8Json.Resolvers;
+using BufferPool = Spreads.Serialization.Utf8Json.Internal.BufferPool;
 
 namespace Spreads.Serialization.Utf8Json
 {
@@ -76,6 +79,23 @@ namespace Spreads.Serialization.Utf8Json
             formatter.Serialize(ref writer, value, resolver);
             return writer.ToUtf8ByteArray();
         }
+
+#if SPREADS
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal static RecyclableMemoryStream SerializeWithOffset<T>(T value, int offset)
+        {
+            // if we need to resize then all intermediate buffers are returned to the pool (in FastResize)
+            // when RMS is disposed then the final buffer is also returned to the pool
+            var bufferSize = 65535;
+            var resolver = DefaultResolver;
+            var buffer = BufferPool<byte>.Rent(bufferSize);
+            var writer = new JsonWriter(buffer, offset);
+            var formatter = resolver.GetFormatterWithVerify<T>();
+            formatter.Serialize(ref writer, value, resolver);
+            return RecyclableMemoryStream.Create(RecyclableMemoryStreamManager.Default, null,
+                buffer.Length, buffer, writer.CurrentOffset);
+        }
+#endif
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Serialize<T>(ref JsonWriter writer, T value)
@@ -260,6 +280,15 @@ namespace Spreads.Serialization.Utf8Json
         public static T Deserialize<T>(Stream stream, IJsonFormatterResolver resolver)
         {
             if (resolver == null) resolver = DefaultResolver;
+
+#if SPREADS
+            if (stream is RecyclableMemoryStream rms && rms.Chunks.IsSingleChunk)
+            {
+#pragma warning disable 618
+                return Deserialize<T>(rms.Chunks.SingleChunk, resolver);
+#pragma warning restore 618
+            }
+#endif
 
 #if NETSTANDARD && !NET45
             var ms = stream as MemoryStream;
@@ -495,17 +524,22 @@ namespace Spreads.Serialization.Utf8Json
 
         private static class MemoryPool
         {
+#if !SPREADS
             [ThreadStatic]
             private static byte[] buffer = null;
-
+#endif
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static byte[] GetBuffer()
             {
+#if !SPREADS
                 if (buffer == null)
                 {
                     buffer = new byte[65536];
                 }
                 return buffer;
+#else
+                return Buffers.BufferPool.StaticBuffer.Array;
+#endif
             }
         }
     }

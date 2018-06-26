@@ -29,6 +29,7 @@ namespace Spreads.Serialization.Utf8Json
 
         public int CurrentOffset
         {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
                 return offset;
@@ -81,6 +82,12 @@ namespace Spreads.Serialization.Utf8Json
         {
             this.buffer = initialBuffer;
             this.offset = 0;
+        }
+
+        public JsonWriter(byte[] initialBuffer, int offset)
+        {
+            this.buffer = initialBuffer;
+            this.offset = offset;
         }
 
         public ArraySegment<byte> GetBuffer()
