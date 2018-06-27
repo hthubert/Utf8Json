@@ -1,12 +1,11 @@
-﻿using System;
+﻿using Spreads.Buffers;
+using Spreads.Serialization.Utf8Json.Internal;
+using Spreads.Serialization.Utf8Json.Resolvers;
+using System;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
-using Spreads.Buffers;
-using Spreads.DataTypes;
-using Spreads.Serialization.Utf8Json.Internal;
-using Spreads.Serialization.Utf8Json.Resolvers;
 using BufferPool = Spreads.Serialization.Utf8Json.Internal.BufferPool;
 
 namespace Spreads.Serialization.Utf8Json
@@ -81,13 +80,18 @@ namespace Spreads.Serialization.Utf8Json
         }
 
 #if SPREADS
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static RecyclableMemoryStream SerializeWithOffset<T>(T value, int offset)
+        public static RecyclableMemoryStream SerializeWithOffset<T>(T value, int offset)
         {
             // if we need to resize then all intermediate buffers are returned to the pool (in FastResize)
             // when RMS is disposed then the final buffer is also returned to the pool
             var bufferSize = 65535;
-            var resolver = DefaultResolver;
+            if (offset >= bufferSize)
+            {
+                ThrowHelper.ThrowInvalidOperationException();
+            }
+            var resolver = StandardResolver.Default;
             var buffer = BufferPool<byte>.Rent(bufferSize);
             var writer = new JsonWriter(buffer, offset);
             var formatter = resolver.GetFormatterWithVerify<T>();
@@ -95,6 +99,7 @@ namespace Spreads.Serialization.Utf8Json
             return RecyclableMemoryStream.Create(RecyclableMemoryStreamManager.Default, null,
                 buffer.Length, buffer, writer.CurrentOffset);
         }
+
 #endif
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -282,10 +287,10 @@ namespace Spreads.Serialization.Utf8Json
             if (resolver == null) resolver = DefaultResolver;
 
 #if SPREADS
-            if (stream is RecyclableMemoryStream rms && rms.Chunks.IsSingleChunk)
+            if (stream is RecyclableMemoryStream rms && rms.IsSingleChunk)
             {
 #pragma warning disable 618
-                return Deserialize<T>(rms.Chunks.SingleChunk, resolver);
+                return Deserialize<T>(rms.SingleChunk, resolver);
 #pragma warning restore 618
             }
 #endif
@@ -528,6 +533,7 @@ namespace Spreads.Serialization.Utf8Json
             [ThreadStatic]
             private static byte[] buffer = null;
 #endif
+
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static byte[] GetBuffer()
             {

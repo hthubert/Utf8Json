@@ -24,6 +24,14 @@ namespace Spreads.Serialization.Utf8Json
             writer.offset += src.Length;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void WriteRawSegment(ref JsonWriter writer, ArraySegment<byte> src)
+        {
+            BinaryUtil.EnsureCapacity(ref writer.buffer, writer.offset, src.Count);
+            if (src.Count > 0) { Unsafe.CopyBlockUnaligned(ref writer.buffer[writer.offset], ref src.Array[src.Offset], (uint)src.Count); }
+            writer.offset += src.Count;
+        }
+
         private byte[] buffer;
         private int offset;
 
@@ -134,6 +142,15 @@ namespace Spreads.Serialization.Utf8Json
         public void WriteRaw(byte[] rawValue)
         {
             WriteRaw(ref this, rawValue);
+        }
+
+#if NETSTANDARD
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+        public void WriteRawSegment(ArraySegment<byte> rawSegment)
+        {
+            WriteRawSegment(ref this, rawSegment);
         }
 
 #if NETSTANDARD
