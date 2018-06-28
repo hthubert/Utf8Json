@@ -7,7 +7,9 @@ using Spreads.Serialization.Utf8Json.Formatters;
 using System.Collections.Generic;
 using Spreads.Serialization.Utf8Json.Resolvers.Internal;
 using System.Collections.ObjectModel;
-
+#if SPREADS
+using Spreads.DataTypes;
+#endif
 #if NETSTANDARD
 using System.Threading.Tasks;
 #endif
@@ -123,6 +125,13 @@ namespace Spreads.Serialization.Utf8Json.Resolvers.Internal
                 {
                     return CreateInstance(typeof(KeyValuePairFormatter<,>), ti.GenericTypeArguments);
                 }
+#if SPREADS
+                else if (genericType == typeof(TaggedKeyValue<,>))
+                {
+                    return CreateInstance(typeof(TaggedKeyValueFormatter<,>), ti.GenericTypeArguments);
+                }
+#endif
+
                 else if (isNullable && nullableElementType.GetTypeInfo().IsConstructedGenericType() && nullableElementType.GetGenericTypeDefinition() == typeof(KeyValuePair<,>))
                 {
                     return CreateInstance(typeof(NullableFormatter<>), new[] { nullableElementType });
