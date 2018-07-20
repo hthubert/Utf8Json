@@ -106,7 +106,7 @@ namespace Spreads.Serialization.Utf8Json.Internal
 #if SPREADS
                 if (array2 != Buffers.BufferPool.StaticBuffer.Array)
                 {
-                    Buffers.BufferPool<byte>.Return(array2);
+                    Buffers.BufferPool<byte>.Return(array2, true);
                 }
 #endif
                 array = array3;

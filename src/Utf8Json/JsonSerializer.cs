@@ -96,6 +96,10 @@ namespace Spreads.Serialization.Utf8Json
             var writer = new JsonWriter(buffer, offset);
             var formatter = resolver.GetFormatterWithVerify<T>();
             formatter.Serialize(ref writer, value, resolver);
+            if (writer.CurrentOffset > buffer.Length)
+            {
+                buffer = writer.GetBuffer().Array;                
+            }
             return RecyclableMemoryStream.Create(RecyclableMemoryStreamManager.Default, null,
                 buffer.Length, buffer, writer.CurrentOffset);
         }
