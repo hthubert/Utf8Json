@@ -104,6 +104,32 @@ namespace Spreads.Serialization.Utf8Json
                 buffer.Length, buffer, writer.CurrentOffset);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal static ArraySegment<byte> SerializeToRentedBuffer<T>(T value, int offset = 0)
+        {
+            var bufferSize = 65535;
+            if (offset >= bufferSize)
+            {
+                ThrowHelper.ThrowInvalidOperationException();
+            }
+            var resolver = StandardResolver.Default;
+            var buffer = BufferPool<byte>.Rent(bufferSize);
+            var writer = new JsonWriter(buffer, offset);
+            var formatter = resolver.GetFormatterWithVerify<T>();
+            formatter.Serialize(ref writer, value, resolver);
+            // writer expands the buffer as needed using the same BufferPool<byte>
+            if (writer.CurrentOffset > buffer.Length)
+            {
+                buffer = writer.GetBuffer().Array;
+            }
+
+            if (writer.CurrentOffset < buffer.Length)
+            {
+                buffer[writer.CurrentOffset] = 0;
+            }
+            return new ArraySegment<byte>(buffer, offset, writer.CurrentOffset - offset);
+        }
+
 #endif
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
