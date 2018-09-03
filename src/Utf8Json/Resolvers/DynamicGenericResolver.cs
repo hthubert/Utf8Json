@@ -130,6 +130,10 @@ namespace Spreads.Serialization.Utf8Json.Resolvers.Internal
                 {
                     return CreateInstance(typeof(TaggedKeyValueFormatter<,>), ti.GenericTypeArguments);
                 }
+                else if (genericType == typeof(Timestamped<>))
+                {
+                    return CreateInstance(typeof(TimestampedFormatter<>), ti.GenericTypeArguments);
+                }
 #endif
 
                 else if (isNullable && nullableElementType.GetTypeInfo().IsConstructedGenericType() && nullableElementType.GetGenericTypeDefinition() == typeof(KeyValuePair<,>))
