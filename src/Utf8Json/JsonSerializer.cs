@@ -98,21 +98,20 @@ namespace Spreads.Serialization.Utf8Json
             formatter.Serialize(ref writer, value, resolver);
             if (writer.CurrentOffset > buffer.Length)
             {
-                buffer = writer.GetBuffer().Array;                
+                buffer = writer.GetBuffer().Array;
             }
-            return RecyclableMemoryStream.Create(RecyclableMemoryStreamManager.Default, null,
-                buffer.Length, buffer, writer.CurrentOffset);
+            return RecyclableMemoryStream.Create(buffer.Length, buffer, writer.CurrentOffset, null, RecyclableMemoryStreamManager.Default);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static ArraySegment<byte> SerializeToRentedBuffer<T>(T value, int offset = 0)
         {
-            var bufferSize = 65535;
+            const int bufferSize = 65535;
             if (offset >= bufferSize)
             {
                 ThrowHelper.ThrowInvalidOperationException();
             }
-            var resolver = StandardResolver.Default;
+            var resolver = DefaultResolver;
             var buffer = BufferPool<byte>.Rent(bufferSize);
             var writer = new JsonWriter(buffer, offset);
             var formatter = resolver.GetFormatterWithVerify<T>();
@@ -123,11 +122,15 @@ namespace Spreads.Serialization.Utf8Json
                 buffer = writer.GetBuffer().Array;
             }
 
-            if (writer.CurrentOffset < buffer.Length)
-            {
-                buffer[writer.CurrentOffset] = 0;
-            }
             return new ArraySegment<byte>(buffer, offset, writer.CurrentOffset - offset);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal static RetainedMemory<byte> SerializeToRetainedMemory<T>(T value, int offset = 0)
+        {
+            var segment = SerializeToRentedBuffer(value, offset);
+            var arrayMemory = ArrayMemory<byte>.Create(segment.Array, segment.Offset - offset, segment.Count + offset, false, true);
+            return arrayMemory.Retain();
         }
 
 #endif
@@ -263,6 +266,21 @@ namespace Spreads.Serialization.Utf8Json
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static T Deserialize<T>(DirectBuffer bytes)
+        {
+            return Deserialize<T>(bytes, defaultResolver);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static T Deserialize<T>(DirectBuffer bytes, IJsonFormatterResolver resolver)
+        {
+            if (resolver == null) resolver = DefaultResolver;
+            var reader = new JsonReader(bytes);
+            var formatter = resolver.GetFormatterWithVerify<T>();
+            return formatter.Deserialize(ref reader, resolver);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static T Deserialize<T>(byte[] bytes)
         {
             return Deserialize<T>(bytes, defaultResolver);
@@ -281,13 +299,40 @@ namespace Spreads.Serialization.Utf8Json
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static T Deserialize<T>(ReadOnlyMemory<byte> memory)
+        {
+            return Deserialize<T>(memory, null);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static unsafe T Deserialize<T>(ReadOnlyMemory<byte> memory, IJsonFormatterResolver resolver)
+        {
+            if (resolver == null) resolver = DefaultResolver;
+            var mh = memory.Pin();
+            try
+            {
+                var db = new DirectBuffer(memory.Length, (byte*)mh.Pointer);
+                var reader = new JsonReader(db);
+                var formatter = resolver.GetFormatterWithVerify<T>();
+                return formatter.Deserialize(ref reader, resolver);
+            }
+            finally
+            {
+                mh.Dispose();
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static T Deserialize<T>(byte[] bytes, int offset, IJsonFormatterResolver resolver)
         {
             if (resolver == null) resolver = DefaultResolver;
 
-            var reader = new JsonReader(bytes, offset);
-            var formatter = resolver.GetFormatterWithVerify<T>();
-            return formatter.Deserialize(ref reader, resolver);
+            using (bytes.AsDirectBuffer(out var directBuffer))
+            {
+                var reader = new JsonReader(directBuffer);
+                var formatter = resolver.GetFormatterWithVerify<T>();
+                return formatter.Deserialize(ref reader, resolver);
+            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -316,142 +361,107 @@ namespace Spreads.Serialization.Utf8Json
         {
             if (resolver == null) resolver = DefaultResolver;
 
-#if SPREADS
+#pragma warning disable 618
             if (stream is RecyclableMemoryStream rms && rms.IsSingleChunk)
             {
-#pragma warning disable 618
                 return Deserialize<T>(rms.SingleChunk, resolver);
-#pragma warning restore 618
             }
-#endif
+#pragma warning restore 618
 
 #if NETSTANDARD && !NET45
-            var ms = stream as MemoryStream;
-            if (ms != null)
+            if (stream is MemoryStream ms)
             {
-                ArraySegment<byte> buf2;
-                if (ms.TryGetBuffer(out buf2))
+                if (ms.TryGetBuffer(out var buf))
                 {
-                    // when token is number, can not use from pool(can not find end line).
-                    var token = new JsonReader(buf2.Array, buf2.Offset).GetCurrentJsonToken();
-                    if (token == JsonToken.Number)
-                    {
-                        var buf3 = new byte[buf2.Count];
-                        Unsafe.CopyBlockUnaligned(ref buf3[0], ref buf2.Array[buf2.Offset], (uint)buf3.Length);
-                        return Deserialize<T>(buf3, 0, resolver);
-                    }
-
-                    return Deserialize<T>(buf2.Array, buf2.Offset, resolver);
+                    return Deserialize<T>(buf, resolver);
                 }
             }
 #endif
+
+            if (stream.CanSeek)
             {
-                var buf = MemoryPool.GetBuffer();
-                var len = FillFromStream(stream, ref buf);
-
-                // when token is number, can not use from pool(can not find end line).
-                var token = new JsonReader(buf).GetCurrentJsonToken();
-                if (token == JsonToken.Number)
+                var len = checked((int)stream.Length);
+                var buf2 = BufferPool<byte>.Rent(len);
+                try
                 {
-                    buf = BinaryUtil.FastCloneWithResize(buf, len);
-                }
-
-                return Deserialize<T>(buf, resolver);
-            }
-        }
-
-#if NETSTANDARD
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static System.Threading.Tasks.Task<T> DeserializeAsync<T>(Stream stream)
-        {
-            return DeserializeAsync<T>(stream, defaultResolver);
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static async System.Threading.Tasks.Task<T> DeserializeAsync<T>(Stream stream, IJsonFormatterResolver resolver)
-        {
-            if (resolver == null) resolver = DefaultResolver;
-
-            var buffer = BufferPool.Default.Rent();
-            var buf = buffer;
-            try
-            {
-                int length = 0;
-                int read;
-                while ((read = await stream.ReadAsync(buf, length, buf.Length - length).ConfigureAwait(false)) > 0)
-                {
-                    length += read;
-                    if (length == buf.Length)
+                    int numBytesToRead = len;
+                    int numBytesRead = 0;
+                    do
                     {
-                        BinaryUtil.FastResize(ref buf, length * 2);
-                    }
-                }
+                        int n = stream.Read(buf2, numBytesRead, len);
+                        numBytesRead += n;
+                        numBytesToRead -= n;
+                    } while (numBytesToRead > 0);
 
-                // when token is number, can not use from pool(can not find end line).
-                var token = new JsonReader(buf).GetCurrentJsonToken();
-                if (token == JsonToken.Number)
+                    return Deserialize<T>(new ArraySegment<byte>(buf2, 0, len), resolver);
+                }
+                finally
                 {
-                    buf = BinaryUtil.FastCloneWithResize(buf, length);
+                    BufferPool<byte>.Return(buf2);
                 }
-
-                return Deserialize<T>(buf, resolver);
             }
-            finally
+
             {
-                BufferPool.Default.Return(buffer);
+                var buf3 = BufferPool<byte>.Rent(65536);
+                var len = FillFromStream(stream, ref buf3);
+                try
+                {
+                    return Deserialize<T>(new ArraySegment<byte>(buf3, 0, len), resolver);
+                }
+                finally
+                {
+                    BufferPool<byte>.Return(buf3);
+                }
             }
         }
 
-#endif
+        //[MethodImpl(MethodImplOptions.AggressiveInlining)]
+        //public static string PrettyPrint(byte[] json)
+        //{
+        //    return PrettyPrint(json, 0);
+        //}
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static string PrettyPrint(byte[] json)
-        {
-            return PrettyPrint(json, 0);
-        }
+        //[MethodImpl(MethodImplOptions.AggressiveInlining)]
+        //public static string PrettyPrint(byte[] json, int offset)
+        //{
+        //    var reader = new JsonReader(json, offset);
+        //    var writer = new JsonWriter(MemoryPool.GetBuffer());
+        //    WritePrittyPrint(ref reader, ref writer, 0);
+        //    return writer.ToString();
+        //}
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static string PrettyPrint(byte[] json, int offset)
-        {
-            var reader = new JsonReader(json, offset);
-            var writer = new JsonWriter(MemoryPool.GetBuffer());
-            WritePrittyPrint(ref reader, ref writer, 0);
-            return writer.ToString();
-        }
+        //[MethodImpl(MethodImplOptions.AggressiveInlining)]
+        //public static string PrettyPrint(string json)
+        //{
+        //    var reader = new JsonReader(Encoding.UTF8.GetBytes(json));
+        //    var writer = new JsonWriter(MemoryPool.GetBuffer());
+        //    WritePrittyPrint(ref reader, ref writer, 0);
+        //    return writer.ToString();
+        //}
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static string PrettyPrint(string json)
-        {
-            var reader = new JsonReader(Encoding.UTF8.GetBytes(json));
-            var writer = new JsonWriter(MemoryPool.GetBuffer());
-            WritePrittyPrint(ref reader, ref writer, 0);
-            return writer.ToString();
-        }
+        //[MethodImpl(MethodImplOptions.AggressiveInlining)]
+        //public static byte[] PrettyPrintByteArray(byte[] json)
+        //{
+        //    return PrettyPrintByteArray(json, 0);
+        //}
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static byte[] PrettyPrintByteArray(byte[] json)
-        {
-            return PrettyPrintByteArray(json, 0);
-        }
+        //[MethodImpl(MethodImplOptions.AggressiveInlining)]
+        //public static byte[] PrettyPrintByteArray(byte[] json, int offset)
+        //{
+        //    var reader = new JsonReader(json, offset);
+        //    var writer = new JsonWriter(MemoryPool.GetBuffer());
+        //    WritePrittyPrint(ref reader, ref writer, 0);
+        //    return writer.ToUtf8ByteArray();
+        //}
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static byte[] PrettyPrintByteArray(byte[] json, int offset)
-        {
-            var reader = new JsonReader(json, offset);
-            var writer = new JsonWriter(MemoryPool.GetBuffer());
-            WritePrittyPrint(ref reader, ref writer, 0);
-            return writer.ToUtf8ByteArray();
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static byte[] PrettyPrintByteArray(string json)
-        {
-            var reader = new JsonReader(Encoding.UTF8.GetBytes(json));
-            var writer = new JsonWriter(MemoryPool.GetBuffer());
-            WritePrittyPrint(ref reader, ref writer, 0);
-            return writer.ToUtf8ByteArray();
-        }
+        //[MethodImpl(MethodImplOptions.AggressiveInlining)]
+        //public static byte[] PrettyPrintByteArray(string json)
+        //{
+        //    var reader = new JsonReader(Encoding.UTF8.GetBytes(json));
+        //    var writer = new JsonWriter(MemoryPool.GetBuffer());
+        //    WritePrittyPrint(ref reader, ref writer, 0);
+        //    return writer.ToUtf8ByteArray();
+        //}
 
         private static readonly byte[][] indent = Enumerable.Range(0, 100).Select(x => Encoding.UTF8.GetBytes(new string(' ', x * 2))).ToArray();
         private static readonly byte[] newLine = Encoding.UTF8.GetBytes(Environment.NewLine);

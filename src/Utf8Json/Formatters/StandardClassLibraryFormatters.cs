@@ -7,6 +7,7 @@ using System.Text;
 using Spreads.Serialization.Utf8Json.Formatters.Internal;
 using Spreads.Serialization.Utf8Json.Internal;
 using System.Text.RegularExpressions;
+using Spreads.Buffers;
 
 #if NETSTANDARD
 
@@ -313,7 +314,7 @@ namespace Spreads.Serialization.Utf8Json.Formatters
             if (token == JsonToken.Number)
             {
                 var number = reader.ReadNumberSegment();
-                return decimal.Parse(StringEncoding.UTF8.GetString(number.Array, number.Offset, number.Count), NumberStyles.Float, CultureInfo.InvariantCulture);
+                return decimal.Parse(StringEncoding.UTF8.GetString(number), NumberStyles.Float, CultureInfo.InvariantCulture);
             }
             else if (token == JsonToken.String)
             {

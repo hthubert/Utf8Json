@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
 using Spreads.Serialization.Utf8Json.Internal;
+using Spreads.Buffers;
+using BufferPool = Spreads.Serialization.Utf8Json.Internal.BufferPool;
 
 namespace Spreads.Serialization.Utf8Json.Formatters
 {
@@ -239,10 +241,14 @@ namespace Spreads.Serialization.Utf8Json.Formatters
         public DateTime Deserialize(ref JsonReader reader, IJsonFormatterResolver formatterResolver)
         {
             var str = reader.ReadStringSegmentUnsafe();
-            var array = str.Array;
-            var i = str.Offset;
-            var len = str.Count;
-            var to = str.Offset + str.Count;
+            //var array = str.Array;
+            // var i = str.Offset;
+            //var len = str.Count;
+            //var to = str.Offset + str.Count;
+            var array = str;
+            var i = 0;
+            var len = str.Length;
+            var to = len;
 
             // YYYY
             if (len == 4)
@@ -335,7 +341,7 @@ namespace Spreads.Serialization.Utf8Json.Formatters
             {
                 kind = DateTimeKind.Utc;
             }
-            else if (i < to && array[i] == '-' || array[i] == '+')
+            else if (i < to && (array[i] == '-' || array[i] == '+'))
             {
                 if (!(i + 5 < to)) goto ERROR;
 
@@ -355,7 +361,7 @@ namespace Spreads.Serialization.Utf8Json.Formatters
             return new DateTime(year, month, day, hour, minute, second, kind).AddTicks(ticks);
 
             ERROR:
-            throw new InvalidOperationException("invalid datetime format. value:" + StringEncoding.UTF8.GetString(str.Array, str.Offset, str.Count));
+            throw new InvalidOperationException("invalid datetime format. value:" + StringEncoding.UTF8.GetString(str));
         }
     }
 
@@ -375,7 +381,7 @@ namespace Spreads.Serialization.Utf8Json.Formatters
         {
             var str = reader.ReadStringSegmentUnsafe();
             int readCount;
-            var ticks = NumberConverter.ReadUInt64(str.Array, str.Offset, out readCount);
+            var ticks = NumberConverter.ReadUInt64(str, 0, out readCount);
 
             return UnixEpoch.AddSeconds(ticks);
         }
@@ -589,10 +595,15 @@ namespace Spreads.Serialization.Utf8Json.Formatters
         public DateTimeOffset Deserialize(ref JsonReader reader, IJsonFormatterResolver formatterResolver)
         {
             var str = reader.ReadStringSegmentUnsafe();
-            var array = str.Array;
-            var i = str.Offset;
-            var len = str.Count;
-            var to = str.Offset + str.Count;
+            //var array = str.Array;
+            //var i = str.Offset;
+            //var len = str.Count;
+            //var to = str.Offset + str.Count;
+
+            var array = str;
+            var i = 0;
+            var len = str.Length;
+            var to = len;
 
             // YYYY
             if (len == 4)
@@ -681,7 +692,7 @@ namespace Spreads.Serialization.Utf8Json.Formatters
 
             END_TICKS:
 
-            if (i < to && array[i] == '-' || array[i] == '+')
+            if (i < to && (array[i] == '-' || array[i] == '+'))
             {
                 if (!(i + 5 < to)) goto ERROR;
 
@@ -700,7 +711,7 @@ namespace Spreads.Serialization.Utf8Json.Formatters
             return new DateTimeOffset(year, month, day, hour, minute, second, TimeSpan.Zero).AddTicks(ticks);
 
             ERROR:
-            throw new InvalidOperationException("invalid datetime format. value:" + StringEncoding.UTF8.GetString(str.Array, str.Offset, str.Count));
+            throw new InvalidOperationException("invalid datetime format. value:" + StringEncoding.UTF8.GetString(str));
         }
     }
 
@@ -849,20 +860,25 @@ namespace Spreads.Serialization.Utf8Json.Formatters
             writer.WriteRawUnsafe((byte)'\"');
         }
 
-        public TimeSpan Deserialize(ref JsonReader reader, IJsonFormatterResolver formatterResolver)
+        public unsafe TimeSpan Deserialize(ref JsonReader reader, IJsonFormatterResolver formatterResolver)
         {
             var str = reader.ReadStringSegmentUnsafe();
-            var array = str.Array;
-            var i = str.Offset;
-            var len = str.Count;
-            var to = str.Offset + str.Count;
+            //var array = str.Array;
+            //var i = str.Offset;
+            //var len = str.Count;
+            //var to = str.Offset + str.Count;
+
+            var array = str;
+            var i = 0;
+            var len = str.Length;
+            var to = len;
 
             // check day exists
             bool hasDay = false;
             {
                 bool foundDot = false;
                 bool foundColon = false;
-                for (int j = i; j < str.Count; j++)
+                for (int j = i; j < str.Length; j++)
                 {
                     if (array[j] == '.')
                     {
@@ -901,7 +917,13 @@ namespace Spreads.Serialization.Utf8Json.Formatters
                     {
                         poolArray[day++] = array[i];
                     }
-                    day = new JsonReader(poolArray).ReadInt32();
+
+                    fixed (byte* ptr = &poolArray[0])
+                    {
+                        var db = new DirectBuffer(poolArray.Length, ptr);
+                        day = new JsonReader(db).ReadInt32();
+                    }
+                    
                     i++; // skip '.'
                 }
                 finally
@@ -967,7 +989,7 @@ namespace Spreads.Serialization.Utf8Json.Formatters
                 : ts.Add(tk);
 
             ERROR:
-            throw new InvalidOperationException("invalid datetime format. value:" + StringEncoding.UTF8.GetString(str.Array, str.Offset, str.Count));
+            throw new InvalidOperationException("invalid datetime format. value:" + StringEncoding.UTF8.GetString(str));
         }
     }
 }

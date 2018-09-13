@@ -64,6 +64,7 @@ namespace Spreads.Serialization.Utf8Json.Internal
             FastResize(ref bytes, num);
         }
 
+        [MethodImpl(MethodImplOptions.NoInlining)]
         private static void ThrowMaxCapacity()
         {
             throw new InvalidOperationException("byte[] size reached maximum size of array(0x7FFFFFC7), can not write to single byte[]. Details: https://msdn.microsoft.com/en-us/library/system.array");

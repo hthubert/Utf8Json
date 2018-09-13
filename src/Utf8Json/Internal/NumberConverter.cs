@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Buffers.Text;
 using System.Collections.Generic;
 using System.Text;
+using Spreads.Buffers;
 using Spreads.Serialization.Utf8Json.Internal.DoubleConversion;
 
 #if NETSTANDARD
@@ -22,7 +24,7 @@ namespace Spreads.Serialization.Utf8Json.Internal
 #endif
         public static bool IsNumber(byte c)
         {
-            return (byte)'0' <= c && c <= (byte)'9';
+            return unchecked ((uint) (c - '0')) <= 9;
         }
 
         /// <summary>
@@ -59,49 +61,53 @@ namespace Spreads.Serialization.Utf8Json.Internal
 #if NETSTANDARD
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-        public static sbyte ReadSByte(byte[] bytes, int offset, out int readCount)
+        public static sbyte ReadSByte(DirectBuffer bytes, int offset, out int readCount)
         {
             return checked((sbyte)ReadInt64(bytes, offset, out readCount));
         }
 #if NETSTANDARD
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-        public static short ReadInt16(byte[] bytes, int offset, out int readCount)
+        public static short ReadInt16(DirectBuffer bytes, int offset, out int readCount)
         {
             return checked((short)ReadInt64(bytes, offset, out readCount));
         }
 #if NETSTANDARD
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-        public static int ReadInt32(byte[] bytes, int offset, out int readCount)
+        public static int ReadInt32(DirectBuffer bytes, int offset, out int readCount)
         {
             return checked((int)ReadInt64(bytes, offset, out readCount));
         }
 #if NETSTANDARD
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-        public static long ReadInt64(byte[] bytes, int offset, out int readCount)
+        public static long ReadInt64(DirectBuffer bytes, int offset, out int readCount)
         {
             var value = 0L;
             var sign = 1;
+            var offset1 = offset;
 
             if (bytes[offset] == '-')
             {
                 sign = -1;
+                offset1 += 1;
             }
 
-            for (int i = ((sign == -1) ? offset + 1 : offset); i < bytes.Length; i++)
+            var len = bytes.Length;
+            for (int i = offset1; i < len; i++)
             {
-                if (!IsNumber(bytes[i]))
+                var b = (long)(bytes[i] - '0');
+                if (unchecked ((ulong)b) > 9)
                 {
                     readCount = i - offset;
                     goto END;
                 }
 
                 // long.MinValue causes overflow so use unchecked.
-                value = unchecked(value * 10 + (bytes[i] - '0'));
+                value = unchecked(value * 10 + b);
             }
-            readCount = bytes.Length - offset;
+            readCount = len - offset;
 
             END:
             return unchecked(value * sign);
@@ -109,57 +115,62 @@ namespace Spreads.Serialization.Utf8Json.Internal
 #if NETSTANDARD
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-        public static byte ReadByte(byte[] bytes, int offset, out int readCount)
+        public static byte ReadByte(DirectBuffer bytes, int offset, out int readCount)
         {
             return checked((byte)ReadUInt64(bytes, offset, out readCount));
         }
 #if NETSTANDARD
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-        public static ushort ReadUInt16(byte[] bytes, int offset, out int readCount)
+        public static ushort ReadUInt16(DirectBuffer bytes, int offset, out int readCount)
         {
             return checked((ushort)ReadUInt64(bytes, offset, out readCount));
         }
 #if NETSTANDARD
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-        public static uint ReadUInt32(byte[] bytes, int offset, out int readCount)
+        public static uint ReadUInt32(DirectBuffer bytes, int offset, out int readCount)
         {
             return checked((uint)ReadUInt64(bytes, offset, out readCount));
         }
+
+
+
 #if NETSTANDARD
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-        public static ulong ReadUInt64(byte[] bytes, int offset, out int readCount)
+        public static ulong ReadUInt64(DirectBuffer bytes, int offset, out int readCount)
         {
             var value = 0UL;
-
-            for (int i = offset; i < bytes.Length; i++)
+            var len = bytes.Length;
+            for (int i = offset; i < len; i++)
             {
-                if (!IsNumber(bytes[i]))
+                var b = unchecked ((ulong)(bytes[i] - '0'));
+                if (b > 9)
                 {
                     readCount = i - offset;
                     goto END;
                 }
 
-                value = checked(value * 10 + (ulong)(bytes[i] - '0'));
+                value = checked(value * 10 + b);
             }
-            readCount = bytes.Length - offset;
+            readCount = len - offset;
 
             END:
             return value;
         }
+
 #if NETSTANDARD
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-        public static float ReadSingle(byte[] bytes, int offset, out int readCount)
+        public static float ReadSingle(DirectBuffer bytes, int offset, out int readCount)
         {
             return StringToDoubleConverter.ToSingle(bytes, offset, out readCount);
         }
 #if NETSTANDARD
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-        public static double ReadDouble(byte[] bytes, int offset, out int readCount)
+        public static double ReadDouble(DirectBuffer bytes, int offset, out int readCount)
         {
             return StringToDoubleConverter.ToDouble(bytes, offset, out readCount);
         }
@@ -187,12 +198,12 @@ namespace Spreads.Serialization.Utf8Json.Internal
 #if NETSTANDARD
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-        public static int WriteUInt64(ref byte[] buffer, int offset, ulong value)
+        public static unsafe int WriteUInt64(ref byte[] buffer, int offset, ulong value)
         {
             var startOffset = offset;
 
             ulong num1 = value, num2, num3, num4, num5, div;
-
+            
             if (num1 < 10000)
             {
                 if (num1 < 10) { BinaryUtil.EnsureCapacity(ref buffer, offset, 1); goto L1; }
@@ -330,7 +341,7 @@ namespace Spreads.Serialization.Utf8Json.Internal
 #if NETSTANDARD
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-        public static int WriteInt64(ref byte[] buffer, int offset, long value)
+        public static unsafe int WriteInt64(ref byte[] buffer, int offset, long value)
         {
             var startOffset = offset;
 
@@ -340,30 +351,8 @@ namespace Spreads.Serialization.Utf8Json.Internal
             {
                 if (value == long.MinValue) // -9223372036854775808
                 {
-                    BinaryUtil.EnsureCapacity(ref buffer, offset, 20);
-                    buffer[offset++] = (byte)'-';
-                    buffer[offset++] = (byte)'9';
-                    buffer[offset++] = (byte)'2';
-                    buffer[offset++] = (byte)'2';
-                    buffer[offset++] = (byte)'3';
-                    buffer[offset++] = (byte)'3';
-                    buffer[offset++] = (byte)'7';
-                    buffer[offset++] = (byte)'2';
-                    buffer[offset++] = (byte)'0';
-                    buffer[offset++] = (byte)'3';
-                    buffer[offset++] = (byte)'6';
-                    buffer[offset++] = (byte)'8';
-                    buffer[offset++] = (byte)'5';
-                    buffer[offset++] = (byte)'4';
-                    buffer[offset++] = (byte)'7';
-                    buffer[offset++] = (byte)'7';
-                    buffer[offset++] = (byte)'5';
-                    buffer[offset++] = (byte)'8';
-                    buffer[offset++] = (byte)'0';
-                    buffer[offset++] = (byte)'8';
-                    return offset - startOffset;
+                    return WriteLongMinValue(ref buffer, offset, startOffset);
                 }
-
                 BinaryUtil.EnsureCapacity(ref buffer, offset, 1);
                 buffer[offset++] = (byte)'-';
                 num1 = unchecked(-value);
@@ -484,6 +473,33 @@ namespace Spreads.Serialization.Utf8Json.Internal
 
             return offset - startOffset;
         }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static int WriteLongMinValue(ref byte[] buffer, int offset, int startOffset)
+        {
+            BinaryUtil.EnsureCapacity(ref buffer, offset, 20);
+            buffer[offset++] = (byte) '-';
+            buffer[offset++] = (byte) '9';
+            buffer[offset++] = (byte) '2';
+            buffer[offset++] = (byte) '2';
+            buffer[offset++] = (byte) '3';
+            buffer[offset++] = (byte) '3';
+            buffer[offset++] = (byte) '7';
+            buffer[offset++] = (byte) '2';
+            buffer[offset++] = (byte) '0';
+            buffer[offset++] = (byte) '3';
+            buffer[offset++] = (byte) '6';
+            buffer[offset++] = (byte) '8';
+            buffer[offset++] = (byte) '5';
+            buffer[offset++] = (byte) '4';
+            buffer[offset++] = (byte) '7';
+            buffer[offset++] = (byte) '7';
+            buffer[offset++] = (byte) '5';
+            buffer[offset++] = (byte) '8';
+            buffer[offset++] = (byte) '0';
+            buffer[offset++] = (byte) '8';
+            return offset - startOffset;
+        }
 #if NETSTANDARD
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
@@ -504,7 +520,7 @@ namespace Spreads.Serialization.Utf8Json.Internal
 #if NETSTANDARD
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-        public static bool ReadBoolean(byte[] bytes, int offset, out int readCount)
+        public static bool ReadBoolean(DirectBuffer bytes, int offset, out int readCount)
         {
             if (bytes[offset] == 't')
             {

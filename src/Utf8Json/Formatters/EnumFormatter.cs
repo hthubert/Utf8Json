@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Reflection.Emit;
 using Spreads.Serialization.Utf8Json.Internal;
 using System.Runtime.Serialization;
+using Spreads.Buffers;
 
 namespace Spreads.Serialization.Utf8Json.Formatters
 {
@@ -249,7 +250,7 @@ namespace Spreads.Serialization.Utf8Json.Formatters
                 T value;
                 if (!nameValueMapping.TryGetValue(key, out value))
                 {
-                    var str = StringEncoding.UTF8.GetString(key.Array, key.Offset, key.Count);
+                    var str = StringEncoding.UTF8.GetString(key);
                     value = (T)Enum.Parse(typeof(T), str); // Enum.Parse is slow
                 }
                 return value;

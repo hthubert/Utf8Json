@@ -7,7 +7,7 @@ namespace Spreads.Serialization.Utf8Json.Internal.DoubleConversion
 {
     using uint64_t = UInt64;
 
-    internal struct Vector
+    internal readonly struct Vector
     {
         public readonly byte[] bytes;
         public readonly int start;
@@ -33,11 +33,11 @@ namespace Spreads.Serialization.Utf8Json.Internal.DoubleConversion
             //    bytes[start + i] = value;
             //}
         }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public int length()
-        {
-            return _length;
-        }
+        //[MethodImpl(MethodImplOptions.AggressiveInlining)]
+        //public int length()
+        //{
+        //    return _length;
+        //}
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public byte first()
         {
@@ -128,11 +128,11 @@ namespace Spreads.Serialization.Utf8Json.Internal.DoubleConversion
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         static Vector TrimLeadingZeros(Vector buffer)
         {
-            for (int i = 0; i < buffer.length(); i++)
+            for (int i = 0; i < buffer._length; i++)
             {
                 if (buffer[i] != '0')
                 {
-                    return buffer.SubVector(i, buffer.length());
+                    return buffer.SubVector(i, buffer._length);
                 }
             }
             return new Vector(buffer.bytes, buffer.start, 0);
@@ -140,7 +140,7 @@ namespace Spreads.Serialization.Utf8Json.Internal.DoubleConversion
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         static Vector TrimTrailingZeros(Vector buffer)
         {
-            for (int i = buffer.length() - 1; i >= 0; --i)
+            for (int i = buffer._length - 1; i >= 0; --i)
             {
                 if (buffer[i] != '0')
                 {
@@ -166,7 +166,7 @@ namespace Spreads.Serialization.Utf8Json.Internal.DoubleConversion
             // Set the last digit to be non-zero. This is sufficient to guarantee
             // correct rounding.
             significant_buffer[kMaxSignificantDecimalDigits - 1] = (byte)'1';
-            significant_exponent = exponent + (buffer.length() - kMaxSignificantDecimalDigits);
+            significant_exponent = exponent + (buffer._length - kMaxSignificantDecimalDigits);
         }
 
         // Trims the buffer and cuts it to at most kMaxSignificantDecimalDigits.
@@ -180,8 +180,8 @@ namespace Spreads.Serialization.Utf8Json.Internal.DoubleConversion
         {
             Vector left_trimmed = TrimLeadingZeros(buffer);
             Vector right_trimmed = TrimTrailingZeros(left_trimmed);
-            exponent += left_trimmed.length() - right_trimmed.length();
-            if (right_trimmed.length() > kMaxSignificantDecimalDigits)
+            exponent += left_trimmed._length - right_trimmed._length;
+            if (right_trimmed._length > kMaxSignificantDecimalDigits)
             {
                 // (void)space_size;  // Mark variable as used.
                 CutToMaxSignificantDigits(right_trimmed, exponent,
@@ -207,7 +207,8 @@ namespace Spreads.Serialization.Utf8Json.Internal.DoubleConversion
         {
             uint64_t result = 0;
             int i = 0;
-            while (i < buffer.length() && result <= (kMaxUint64 / 10 - 1))
+            var len = buffer._length;
+            while (i < len && result <= (kMaxUint64 / 10 - 1))
             {
                 int digit = buffer[i++] - '0';
                 result = 10 * result + (ulong)digit;
@@ -227,7 +228,7 @@ namespace Spreads.Serialization.Utf8Json.Internal.DoubleConversion
         {
             int read_digits;
             uint64_t significand = ReadUint64(buffer, out read_digits);
-            if (buffer.length() == read_digits)
+            if (buffer._length == read_digits)
             {
                 result = new DiyFp(significand, 0);
                 remaining_decimals = 0;
@@ -242,7 +243,7 @@ namespace Spreads.Serialization.Utf8Json.Internal.DoubleConversion
                 // Compute the binary exponent.
                 int exponent = 0;
                 result = new DiyFp(significand, exponent);
-                remaining_decimals = buffer.length() - read_digits;
+                remaining_decimals = buffer._length - read_digits;
             }
         }
 
@@ -252,7 +253,7 @@ namespace Spreads.Serialization.Utf8Json.Internal.DoubleConversion
                          int exponent,
                          out double result)
         {
-            if (trimmed.length() <= kMaxExactDoubleIntegerDecimalDigits)
+            if (trimmed._length <= kMaxExactDoubleIntegerDecimalDigits)
             {
                 int read_digits;
                 // The trimmed input fits into a double.
@@ -276,7 +277,7 @@ namespace Spreads.Serialization.Utf8Json.Internal.DoubleConversion
                     return true;
                 }
                 int remaining_digits =
-                    kMaxExactDoubleIntegerDecimalDigits - trimmed.length();
+                    kMaxExactDoubleIntegerDecimalDigits - trimmed._length;
                 if ((0 <= exponent) &&
                     (exponent - remaining_digits < kExactPowersOfTenSize))
                 {
@@ -356,7 +357,7 @@ namespace Spreads.Serialization.Utf8Json.Internal.DoubleConversion
                 int adjustment_exponent = exponent - cached_decimal_exponent;
                 DiyFp adjustment_power = AdjustmentPowerOfTen(adjustment_exponent);
                 input.Multiply(ref adjustment_power);
-                if (kMaxUint64DecimalDigits - buffer.length() >= adjustment_exponent)
+                if (kMaxUint64DecimalDigits - buffer._length >= adjustment_exponent)
                 {
                     // The product of input with the adjustment power fits into a 64 bit
                     // integer.
@@ -437,17 +438,17 @@ namespace Spreads.Serialization.Utf8Json.Internal.DoubleConversion
         static bool ComputeGuess(Vector trimmed, int exponent,
                                  out double guess)
         {
-            if (trimmed.length() == 0)
+            if (trimmed._length == 0)
             {
                 guess = 0.0;
                 return true;
             }
-            if (exponent + trimmed.length() - 1 >= kMaxDecimalPower)
+            if (exponent + trimmed._length - 1 >= kMaxDecimalPower)
             {
                 guess = Double.Infinity();
                 return true;
             }
-            if (exponent + trimmed.length() <= kMinDecimalPower)
+            if (exponent + trimmed._length <= kMinDecimalPower)
             {
                 guess = 0.0;
                 return true;
@@ -466,7 +467,7 @@ namespace Spreads.Serialization.Utf8Json.Internal.DoubleConversion
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static double? Strtod(Vector buffer, int exponent)
+        public static bool Strtod(Vector buffer, int exponent, out double value)
         {
             byte[] copy_buffer = GetCopyBuffer();
             Vector trimmed;
@@ -477,12 +478,18 @@ namespace Spreads.Serialization.Utf8Json.Internal.DoubleConversion
 
             double guess;
             var is_correct = ComputeGuess(trimmed, exponent, out guess);
-            if (is_correct) return guess;
-            return null;
+            if (is_correct)
+            {
+                value = guess;
+                return true;
+            }
+
+            value = default;
+            return false;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static float? Strtof(Vector buffer, int exponent)
+        public static bool Strtof(Vector buffer, int exponent, out float value)
         {
             byte[] copy_buffer = GetCopyBuffer();
             Vector trimmed;
@@ -498,7 +505,8 @@ namespace Spreads.Serialization.Utf8Json.Internal.DoubleConversion
             if (float_guess == double_guess)
             {
                 // This shortcut triggers for integer values.
-                return float_guess;
+                value = float_guess;
+                return true;
             }
 
             // We must catch double-rounding. Say the double has been rounded up, and is
@@ -537,10 +545,12 @@ namespace Spreads.Serialization.Utf8Json.Internal.DoubleConversion
             // return its float-value.
             if (f1 == f4)
             {
-                return float_guess;
+                value = float_guess;
+                return true;
             }
 
-            return null;
+            value = default;
+            return false;
         }
     }
 }

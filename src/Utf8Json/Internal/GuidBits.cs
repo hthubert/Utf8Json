@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Runtime.InteropServices;
+using Spreads.Buffers;
 
 namespace Spreads.Serialization.Utf8Json.Internal
 {
@@ -55,15 +56,15 @@ namespace Spreads.Serialization.Utf8Json.Internal
         }
 
         // 4-pattern, lower/upper and '-' or no
-        public GuidBits(ref ArraySegment<byte> utf8string)
+        public GuidBits(ref DirectBuffer utf8string)
         {
             this = default(GuidBits);
 
-            var array = utf8string.Array;
-            var offset = utf8string.Offset;
+            var array = utf8string;
+            var offset = 0;
 
             // 32
-            if (utf8string.Count == 32)
+            if (utf8string.Length == 32)
             {
                 if (BitConverter.IsLittleEndian)
                 {
@@ -102,7 +103,7 @@ namespace Spreads.Serialization.Utf8Json.Internal
                 this.Byte15 = Parse(array, offset + 30);
                 return;
             }
-            else if (utf8string.Count == 36)
+            else if (utf8string.Length == 36)
             {
                 // '-' => 45
                 if (BitConverter.IsLittleEndian)
@@ -163,7 +164,7 @@ namespace Spreads.Serialization.Utf8Json.Internal
 #if NETSTANDARD
         [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
 #endif
-        static byte Parse(byte[] bytes, int highOffset)
+        static byte Parse(DirectBuffer bytes, int highOffset)
         {
             return unchecked((byte)(SwitchParse(bytes[highOffset]) * 16 + SwitchParse(bytes[highOffset + 1])));
         }

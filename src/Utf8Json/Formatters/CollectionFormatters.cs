@@ -3,6 +3,10 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using Spreads.Buffers;
+#if SPREADS
+using Spreads.Collections.Internal;
+#endif
 using Spreads.Serialization.Utf8Json.Formatters.Internal;
 using Spreads.Serialization.Utf8Json.Internal;
 
@@ -128,6 +132,73 @@ namespace Spreads.Serialization.Utf8Json.Formatters
             }
         }
     }
+
+#if SPREADS
+
+    internal class VectorStorageFormatter<T> : IJsonFormatter<VectorStorage<T>>
+    {
+        static readonly ArrayPool<T> arrayPool = new ArrayPool<T>(99);
+
+        public void Serialize(ref JsonWriter writer, VectorStorage<T> value, IJsonFormatterResolver formatterResolver)
+        {
+            if (value.Storage == null || value.Storage == VectorStorage.Empty) { writer.WriteNull(); return; }
+
+            var vec = value.Storage.Vec;
+            var count = value.Storage.Length;
+
+            writer.WriteBeginArray();
+            var formatter = formatterResolver.GetFormatterWithVerify<T>();
+            if (count != 0)
+            {
+                formatter.Serialize(ref writer, vec.DangerousGetRef<T>(0), formatterResolver);
+            }
+
+            for (int i = 1; i < count; i++)
+            {
+                writer.WriteValueSeparator();
+                formatter.Serialize(ref writer, vec.DangerousGetRef<T>(i), formatterResolver);
+            }
+            writer.WriteEndArray();
+        }
+
+        public VectorStorage<T> Deserialize(ref JsonReader reader, IJsonFormatterResolver formatterResolver)
+        {
+            if (reader.ReadIsNull()) return new VectorStorage<T>(VectorStorage.Empty);
+
+            var count = 0;
+            var formatter = formatterResolver.GetFormatterWithVerify<T>();
+
+            var workingArea = arrayPool.Rent();
+            try
+            {
+                var array = workingArea;
+                reader.ReadIsBeginArrayWithVerify();
+                while (!reader.ReadIsEndArrayWithSkipValueSeparator(ref count))
+                {
+                    if (array.Length < count)
+                    {
+                        Array.Resize<T>(ref array, array.Length * 2);
+                    }
+
+                    array[count - 1] = formatter.Deserialize(ref reader, formatterResolver);
+                }
+
+                var am = BufferPool<T>.MemoryPool.RentMemory(count) as ArrayMemory<T>;
+                
+                // ReSharper disable once PossibleNullReferenceException
+                Array.Copy(array, am.Array, count);
+                Array.Clear(workingArea, 0, Math.Min(count, workingArea.Length));
+                var vs = VectorStorage.Create(am, 0, count);
+                return new VectorStorage<T>(vs); ;
+            }
+            finally
+            {
+                arrayPool.Return(workingArea);
+            }
+        }
+    }
+
+#endif
 
     public class ListFormatter<T> : IJsonFormatter<List<T>>
     {

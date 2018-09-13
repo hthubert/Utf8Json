@@ -1,5 +1,6 @@
 ﻿#if NETSTANDARD
 
+using System;
 using System.Runtime.CompilerServices;
 
 namespace Spreads.Serialization.Utf8Json.Internal
@@ -11,7 +12,7 @@ namespace Spreads.Serialization.Utf8Json.Internal
         #region Hash32
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static unsafe uint Hash32(byte[] bytes, int offset, int count)
+        public static unsafe uint Hash32(Span<byte> bytes, int offset, int count)
         {
             if (count <= 4)
             {
@@ -72,7 +73,7 @@ namespace Spreads.Serialization.Utf8Json.Internal
 
         // 0-4
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        static unsafe uint Hash32Len0to4(byte[] s, int offset, uint len)
+        static unsafe uint Hash32Len0to4(Span<byte> s, int offset, uint len)
         {
             unchecked
             {
@@ -195,7 +196,7 @@ namespace Spreads.Serialization.Utf8Json.Internal
         // entry point
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static unsafe ulong Hash64(byte[] bytes, int offset, int count)
+        public static unsafe ulong Hash64(Span<byte> bytes, int offset, int count)
         {
             fixed (byte* p = &bytes[offset])
             {

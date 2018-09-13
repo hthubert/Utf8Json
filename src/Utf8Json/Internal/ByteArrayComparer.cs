@@ -13,7 +13,7 @@ namespace Spreads.Serialization.Utf8Json.Internal
         static readonly bool Is32Bit = (IntPtr.Size == 4);
 
         [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
-        public static int GetHashCode(byte[] bytes, int offset, int count)
+        public static int GetHashCode(Span<byte> bytes, int offset, int count)
         {
             if (Is32Bit)
             {
@@ -30,7 +30,7 @@ namespace Spreads.Serialization.Utf8Json.Internal
 #if NETSTANDARD
         [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
 #endif
-        public static unsafe bool Equals(byte[] xs, int xsOffset, int xsCount, byte[] ys)
+        public static unsafe bool Equals(Span<byte> xs, int xsOffset, int xsCount, byte[] ys)
         {
             return Equals(xs, xsOffset, xsCount, ys, 0, ys.Length);
         }
@@ -38,7 +38,7 @@ namespace Spreads.Serialization.Utf8Json.Internal
 #if NETSTANDARD
         [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
 #endif
-        public static unsafe bool Equals(byte[] xs, int xsOffset, int xsCount, byte[] ys, int ysOffset, int ysCount)
+        public static unsafe bool Equals(Span<byte> xs, int xsOffset, int xsCount, Span<byte> ys, int ysOffset, int ysCount)
         {
             if (xs == null || ys == null || xsCount != ysCount)
             {

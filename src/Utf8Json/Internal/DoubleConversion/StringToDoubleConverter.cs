@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Text;
+using Spreads.Buffers;
 
 namespace Spreads.Serialization.Utf8Json.Internal.DoubleConversion
 {
@@ -9,11 +11,11 @@ namespace Spreads.Serialization.Utf8Json.Internal.DoubleConversion
 
     internal struct Iterator
     {
-        private byte[] buffer;
+        private DirectBuffer buffer;
         private int offset;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Iterator(byte[] buffer, int offset)
+        public Iterator(DirectBuffer buffer, int offset)
         {
             this.buffer = buffer;
             this.offset = offset;
@@ -25,6 +27,15 @@ namespace Spreads.Serialization.Utf8Json.Internal.DoubleConversion
             get
             {
                 return buffer[offset];
+            }
+        }
+
+        public bool IsDigit
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get
+            {
+                return unchecked((uint)(buffer[offset] - '0')) <= 9;
             }
         }
 
@@ -141,13 +152,13 @@ namespace Spreads.Serialization.Utf8Json.Internal.DoubleConversion
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static double ToDouble(byte[] buffer, int offset, out int readCount)
+        public static double ToDouble(DirectBuffer buffer, int offset, out int readCount)
         {
             return StringToIeee(new Iterator(buffer, offset), buffer.Length - offset, true, out readCount);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static float ToSingle(byte[] buffer, int offset, out int readCount)
+        public static float ToSingle(DirectBuffer buffer, int offset, out int readCount)
         {
             return unchecked((float)StringToIeee(new Iterator(buffer, offset), buffer.Length - offset, false, out readCount));
         }
@@ -173,8 +184,8 @@ namespace Spreads.Serialization.Utf8Json.Internal.DoubleConversion
         private const double junk_string_value_ = double.NaN;
         private const int kMaxSignificantDigits = 772;
         private const int kBufferSize = kMaxSignificantDigits + 10;
-        private static readonly byte[] infinity_symbol_ = StringEncoding.UTF8.GetBytes(double.PositiveInfinity.ToString());
-        private static readonly byte[] nan_symbol_ = StringEncoding.UTF8.GetBytes(double.NaN.ToString());
+        private static readonly byte[] infinity_symbol_ = StringEncoding.UTF8.GetBytes(double.PositiveInfinity.ToString(CultureInfo.InvariantCulture));
+        private static readonly byte[] nan_symbol_ = StringEncoding.UTF8.GetBytes(double.NaN.ToString(CultureInfo.InvariantCulture));
 
         private static readonly byte[] kWhitespaceTable7 = new byte[] { 32, 13, 10, 9, 11, 12 };
         private static readonly int kWhitespaceTable7Length = kWhitespaceTable7.Length;
@@ -302,11 +313,11 @@ namespace Spreads.Serialization.Utf8Json.Internal.DoubleConversion
             int insignificant_digits = 0;
             bool nonzero_digit_dropped = false;
 
-            bool sign = false;
+            bool sign = current == '-';
 
-            if (current == '+' || current == '-')
+            if (current == '+' || sign)
             {
-                sign = (current == '-');
+                // sign = (current == '-');
                 current++;
                 Iterator next_non_space = current;
                 // Skip following spaces (if allowed).
@@ -416,18 +427,20 @@ namespace Spreads.Serialization.Utf8Json.Internal.DoubleConversion
             bool octal = leading_zero && (flags_ & Flags.ALLOW_OCTALS) != 0;
 
             // Copy significant digits of the integer part (if any) to the buffer.
-            while (current >= '0' && current <= '9')
+            // while (current >= '0' && current <= '9')
+            byte curVal;
+            while ( unchecked((uint)((curVal = current.Value) - '0')) <= 9)
             {
                 if (significant_digits < kMaxSignificantDigits)
                 {
-                    buffer[buffer_pos++] = (current.Value);
+                    buffer[buffer_pos++] = (curVal);
                     significant_digits++;
                     // Will later check if it's an octal in the buffer.
                 }
                 else
                 {
                     insignificant_digits++;  // Move the digit into the exponential part.
-                    nonzero_digit_dropped = nonzero_digit_dropped || current != '0';
+                    nonzero_digit_dropped = nonzero_digit_dropped || curVal != '0';
                 }
                 // octal = octal && *current < '8';
                 current++;
@@ -476,18 +489,20 @@ namespace Spreads.Serialization.Utf8Json.Internal.DoubleConversion
 
                 // There is a fractional part.
                 // We don't emit a '.', but adjust the exponent instead.
-                while (current >= '0' && current <= '9')
+                //while (current >= '0' && current <= '9')
+                byte curVal1;
+                while (unchecked((uint)((curVal1 = current.Value) - '0')) <= 9)
                 {
                     if (significant_digits < kMaxSignificantDigits)
                     {
-                        buffer[buffer_pos++] = current.Value;
+                        buffer[buffer_pos++] = curVal1;
                         significant_digits++;
                         exponent--;
                     }
                     else
                     {
                         // Ignore insignificant digits in the fractional part.
-                        nonzero_digit_dropped = nonzero_digit_dropped || current != '0';
+                        nonzero_digit_dropped = nonzero_digit_dropped || curVal1 != '0';
                     }
                     ++current;
                     if (current == end) goto parsing_done;
@@ -538,8 +553,8 @@ namespace Spreads.Serialization.Utf8Json.Internal.DoubleConversion
                     }
                 }
 
-                if (current == end || current < '0' || current > '9')
-                {
+                if (current == end || !current.IsDigit)
+                    {
                     if (allow_trailing_junk)
                     {
                         goto parsing_done;
@@ -567,7 +582,7 @@ namespace Spreads.Serialization.Utf8Json.Internal.DoubleConversion
                         num = num * 10 + digit;
                     }
                     ++current;
-                } while (current != end && current >= '0' && current <= '9');
+                } while (current != end && current.IsDigit);
 
                 exponent += (exponen_sign == '-' ? -num : num);
             }
@@ -613,17 +628,19 @@ namespace Spreads.Serialization.Utf8Json.Internal.DoubleConversion
 
             buffer[buffer_pos] = (byte)'\0';
 
-            double? converted;
+            bool converted;
+            double value;
             if (read_as_double)
             {
-                converted = StringToDouble.Strtod(new Vector(buffer, 0, buffer_pos), exponent);
+                converted = StringToDouble.Strtod(new Vector(buffer, 0, buffer_pos), exponent, out value);
             }
             else
             {
-                converted = StringToDouble.Strtof(new Vector(buffer, 0, buffer_pos), exponent);
+                converted = StringToDouble.Strtof(new Vector(buffer, 0, buffer_pos), exponent, out var value1);
+                value = value1;
             }
 
-            if (converted == null)
+            if (!converted)
             {
                 // read-again
                 processed_characters_count = (current - input);
@@ -641,7 +658,7 @@ namespace Spreads.Serialization.Utf8Json.Internal.DoubleConversion
             }
 
             processed_characters_count = (current - input);
-            return sign ? -converted.Value : converted.Value;
+            return sign ? -value : value;
         }
     }
 }

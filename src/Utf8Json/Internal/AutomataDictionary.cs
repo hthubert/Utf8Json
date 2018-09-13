@@ -5,6 +5,8 @@ using System.Text;
 using System.Linq;
 using System.Reflection.Emit;
 using System.Reflection;
+using System.Runtime.CompilerServices;
+using Spreads.Buffers;
 using Spreads.Serialization.Utf8Json.Internal.Emit;
 
 namespace Spreads.Serialization.Utf8Json.Internal
@@ -50,35 +52,35 @@ namespace Spreads.Serialization.Utf8Json.Internal
             }
         }
 
-        public unsafe bool TryGetValue(ArraySegment<byte> bytes, out int value)
+        public bool TryGetValue(DirectBuffer bytes, out int value)
         {
-            return TryGetValue(bytes.Array, bytes.Offset, bytes.Count, out value);
+            return TryGetValue(bytes, 0, bytes.Length, out value);
         }
 
-        public unsafe bool TryGetValue(byte[] bytes, int offset, int count, out int value)
+        public unsafe bool TryGetValue(DirectBuffer bytes, int offset, int count, out int value)
         {
-            fixed (byte* p = &bytes[offset])
+            byte* p = bytes._pointer + offset;
+            
+            var p1 = p;
+            var node = root;
+            var rest = count;
+
+            while (rest != 0 && node != null)
             {
-                var p1 = p;
-                var node = root;
-                var rest = count;
-
-                while (rest != 0 && node != null)
-                {
-                    node = node.SearchNext(ref p1, ref rest);
-                }
-
-                if (node == null)
-                {
-                    value = -1;
-                    return false;
-                }
-                else
-                {
-                    value = node.Value;
-                    return true;
-                }
+                node = node.SearchNext(ref p1, ref rest);
             }
+
+            if (node == null)
+            {
+                value = -1;
+                return false;
+            }
+            else
+            {
+                value = node.Value;
+                return true;
+            }
+            
         }
 #else
         // for Unity, use safe only.
@@ -467,6 +469,7 @@ namespace Spreads.Serialization.Utf8Json.Internal
         public static readonly MethodInfo GetKeyMethod = typeof(AutomataKeyGen).GetRuntimeMethod("GetKey", new[] { typeof(byte*).MakeByRefType(), typeof(int).MakeByRefType() });
         // public static readonly MethodInfo GetKeySafeMethod = typeof(AutomataKeyGen).GetRuntimeMethod("GetKeySafe", new[] { typeof(byte[]), typeof(int).MakeByRefType(), typeof(int).MakeByRefType() });
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static unsafe ulong GetKey(ref byte* p, ref int rest)
         {
             int readSize;
@@ -481,61 +484,54 @@ namespace Spreads.Serialization.Utf8Json.Internal
                 }
                 else
                 {
-                    switch (rest)
+                    if (rest == 1)
                     {
-                        case 1:
-                            {
-                                key = *(byte*)p;
-                                readSize = 1;
-                                break;
-                            }
-                        case 2:
-                            {
-                                key = *(ushort*)p;
-                                readSize = 2;
-                                break;
-                            }
-                        case 3:
-                            {
-                                var a = *p;
-                                var b = *(ushort*)(p + 1);
-                                key = ((ulong)a | (ulong)b << 8);
-                                readSize = 3;
-                                break;
-                            }
-                        case 4:
-                            {
-                                key = *(uint*)p;
-                                readSize = 4;
-                                break;
-                            }
-                        case 5:
-                            {
-                                var a = *p;
-                                var b = *(uint*)(p + 1);
-                                key = ((ulong)a | (ulong)b << 8);
-                                readSize = 5;
-                                break;
-                            }
-                        case 6:
-                            {
-                                ulong a = *(ushort*)p;
-                                ulong b = *(uint*)(p + 2);
-                                key = (a | (b << 16));
-                                readSize = 6;
-                                break;
-                            }
-                        case 7:
-                            {
-                                var a = *(byte*)p;
-                                var b = *(ushort*)(p + 1);
-                                var c = *(uint*)(p + 3);
-                                key = ((ulong)a | (ulong)b << 8 | (ulong)c << 24);
-                                readSize = 7;
-                                break;
-                            }
-                        default:
-                            throw new InvalidOperationException("Not Supported Length");
+                        key = *(byte*) p;
+                        readSize = 1;
+                    }
+                    else if (rest == 2)
+                    {
+                        key = *(ushort*) p;
+                        readSize = 2;
+                    }
+                    else if (rest == 3)
+                    {
+                        var a = *p;
+                        var b = *(ushort*) (p + 1);
+                        key = ((ulong) a | (ulong) b << 8);
+                        readSize = 3;
+                    }
+                    else if (rest == 4)
+                    {
+                        key = *(uint*) p;
+                        readSize = 4;
+                    }
+                    else if (rest == 5)
+                    {
+                        var a = *p;
+                        var b = *(uint*) (p + 1);
+                        key = ((ulong) a | (ulong) b << 8);
+                        readSize = 5;
+                    }
+                    else if (rest == 6)
+                    {
+                        ulong a = *(ushort*) p;
+                        ulong b = *(uint*) (p + 2);
+                        key = (a | (b << 16));
+                        readSize = 6;
+                    }
+                    else if (rest == 7)
+                    {
+                        var a = *(byte*) p;
+                        var b = *(ushort*) (p + 1);
+                        var c = *(uint*) (p + 3);
+                        key = ((ulong) a | (ulong) b << 8 | (ulong) c << 24);
+                        readSize = 7;
+                    }
+                    else
+                    {
+                        ThrowNotSupportedLength();
+                        return default;
                     }
                 }
 
@@ -543,6 +539,12 @@ namespace Spreads.Serialization.Utf8Json.Internal
                 rest -= readSize;
                 return key;
             }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static void ThrowNotSupportedLength()
+        {
+            ThrowHelper.ThrowInvalidOperationException("Not Supported Length");
         }
 
         public static ulong GetKeySafe(byte[] bytes, ref int offset, ref int rest)
@@ -562,55 +564,54 @@ namespace Spreads.Serialization.Utf8Json.Internal
                     }
                     else
                     {
-                        switch (rest)
+                        if (rest == 1)
                         {
-                            case 1:
-                                {
-                                    key = bytes[offset];
-                                    readSize = 1;
-                                    break;
-                                }
-                            case 2:
-                                {
-                                    key = (ulong)bytes[offset] << 0 | (ulong)bytes[offset + 1] << 8;
-                                    readSize = 2;
-                                    break;
-                                }
-                            case 3:
-                                {
-                                    key = (ulong)bytes[offset] << 0 | (ulong)bytes[offset + 1] << 8 | (ulong)bytes[offset + 2] << 16;
-                                    readSize = 3;
-                                    break;
-                                }
-                            case 4:
-                                {
-                                    key = (ulong)bytes[offset] << 0 | (ulong)bytes[offset + 1] << 8 | (ulong)bytes[offset + 2] << 16 | (ulong)bytes[offset + 3] << 24;
-                                    readSize = 4;
-                                    break;
-                                }
-                            case 5:
-                                {
-                                    key = (ulong)bytes[offset] << 0 | (ulong)bytes[offset + 1] << 8 | (ulong)bytes[offset + 2] << 16 | (ulong)bytes[offset + 3] << 24
-                                        | (ulong)bytes[offset + 4] << 32;
-                                    readSize = 5;
-                                    break;
-                                }
-                            case 6:
-                                {
-                                    key = (ulong)bytes[offset] << 0 | (ulong)bytes[offset + 1] << 8 | (ulong)bytes[offset + 2] << 16 | (ulong)bytes[offset + 3] << 24
-                                        | (ulong)bytes[offset + 4] << 32 | (ulong)bytes[offset + 5] << 40;
-                                    readSize = 6;
-                                    break;
-                                }
-                            case 7:
-                                {
-                                    key = (ulong)bytes[offset] << 0 | (ulong)bytes[offset + 1] << 8 | (ulong)bytes[offset + 2] << 16 | (ulong)bytes[offset + 3] << 24
-                                        | (ulong)bytes[offset + 4] << 32 | (ulong)bytes[offset + 5] << 40 | (ulong)bytes[offset + 6] << 48;
-                                    readSize = 7;
-                                    break;
-                                }
-                            default:
-                                throw new InvalidOperationException("Not Supported Length");
+                            key = bytes[offset];
+                            readSize = 1;
+                        }
+                        else if (rest == 2)
+                        {
+                            key = (ulong) bytes[offset] << 0 | (ulong) bytes[offset + 1] << 8;
+                            readSize = 2;
+                        }
+                        else if (rest == 3)
+                        {
+                            key = (ulong) bytes[offset] << 0 | (ulong) bytes[offset + 1] << 8 |
+                                  (ulong) bytes[offset + 2] << 16;
+                            readSize = 3;
+                        }
+                        else if (rest == 4)
+                        {
+                            key = (ulong) bytes[offset] << 0 | (ulong) bytes[offset + 1] << 8 |
+                                  (ulong) bytes[offset + 2] << 16 | (ulong) bytes[offset + 3] << 24;
+                            readSize = 4;
+                        }
+                        else if (rest == 5)
+                        {
+                            key = (ulong) bytes[offset] << 0 | (ulong) bytes[offset + 1] << 8 |
+                                  (ulong) bytes[offset + 2] << 16 | (ulong) bytes[offset + 3] << 24
+                                  | (ulong) bytes[offset + 4] << 32;
+                            readSize = 5;
+                        }
+                        else if (rest == 6)
+                        {
+                            key = (ulong) bytes[offset] << 0 | (ulong) bytes[offset + 1] << 8 |
+                                  (ulong) bytes[offset + 2] << 16 | (ulong) bytes[offset + 3] << 24
+                                  | (ulong) bytes[offset + 4] << 32 | (ulong) bytes[offset + 5] << 40;
+                            readSize = 6;
+                        }
+                        else if (rest == 7)
+                        {
+                            key = (ulong) bytes[offset] << 0 | (ulong) bytes[offset + 1] << 8 |
+                                  (ulong) bytes[offset + 2] << 16 | (ulong) bytes[offset + 3] << 24
+                                  | (ulong) bytes[offset + 4] << 32 | (ulong) bytes[offset + 5] << 40 |
+                                  (ulong) bytes[offset + 6] << 48;
+                            readSize = 7;
+                        }
+                        else
+                        {
+                            ThrowNotSupportedLength();
+                            return default;
                         }
                     }
 
@@ -631,55 +632,54 @@ namespace Spreads.Serialization.Utf8Json.Internal
                     }
                     else
                     {
-                        switch (rest)
+                        if (rest == 1)
                         {
-                            case 1:
-                                {
-                                    key = bytes[offset];
-                                    readSize = 1;
-                                    break;
-                                }
-                            case 2:
-                                {
-                                    key = (ulong)bytes[offset] << 8 | (ulong)bytes[offset + 1] << 0;
-                                    readSize = 2;
-                                    break;
-                                }
-                            case 3:
-                                {
-                                    key = (ulong)bytes[offset] << 16 | (ulong)bytes[offset + 1] << 8 | (ulong)bytes[offset + 2] << 0;
-                                    readSize = 3;
-                                    break;
-                                }
-                            case 4:
-                                {
-                                    key = (ulong)bytes[offset] << 24 | (ulong)bytes[offset + 1] << 16 | (ulong)bytes[offset + 2] << 8 | (ulong)bytes[offset + 3] << 0;
-                                    readSize = 4;
-                                    break;
-                                }
-                            case 5:
-                                {
-                                    key = (ulong)bytes[offset] << 32 | (ulong)bytes[offset + 1] << 24 | (ulong)bytes[offset + 2] << 16 | (ulong)bytes[offset + 3] << 8
-                                        | (ulong)bytes[offset + 4] << 0;
-                                    readSize = 5;
-                                    break;
-                                }
-                            case 6:
-                                {
-                                    key = (ulong)bytes[offset] << 40 | (ulong)bytes[offset + 1] << 32 | (ulong)bytes[offset + 2] << 24 | (ulong)bytes[offset + 3] << 16
-                                        | (ulong)bytes[offset + 4] << 8 | (ulong)bytes[offset + 5] << 0;
-                                    readSize = 6;
-                                    break;
-                                }
-                            case 7:
-                                {
-                                    key = (ulong)bytes[offset] << 48 | (ulong)bytes[offset + 1] << 40 | (ulong)bytes[offset + 2] << 32 | (ulong)bytes[offset + 3] << 24
-                                        | (ulong)bytes[offset + 4] << 16 | (ulong)bytes[offset + 5] << 8 | (ulong)bytes[offset + 6] << 0;
-                                    readSize = 7;
-                                    break;
-                                }
-                            default:
-                                throw new InvalidOperationException("Not Supported Length");
+                            key = bytes[offset];
+                            readSize = 1;
+                        }
+                        else if (rest == 2)
+                        {
+                            key = (ulong) bytes[offset] << 8 | (ulong) bytes[offset + 1] << 0;
+                            readSize = 2;
+                        }
+                        else if (rest == 3)
+                        {
+                            key = (ulong) bytes[offset] << 16 | (ulong) bytes[offset + 1] << 8 |
+                                  (ulong) bytes[offset + 2] << 0;
+                            readSize = 3;
+                        }
+                        else if (rest == 4)
+                        {
+                            key = (ulong) bytes[offset] << 24 | (ulong) bytes[offset + 1] << 16 |
+                                  (ulong) bytes[offset + 2] << 8 | (ulong) bytes[offset + 3] << 0;
+                            readSize = 4;
+                        }
+                        else if (rest == 5)
+                        {
+                            key = (ulong) bytes[offset] << 32 | (ulong) bytes[offset + 1] << 24 |
+                                  (ulong) bytes[offset + 2] << 16 | (ulong) bytes[offset + 3] << 8
+                                  | (ulong) bytes[offset + 4] << 0;
+                            readSize = 5;
+                        }
+                        else if (rest == 6)
+                        {
+                            key = (ulong) bytes[offset] << 40 | (ulong) bytes[offset + 1] << 32 |
+                                  (ulong) bytes[offset + 2] << 24 | (ulong) bytes[offset + 3] << 16
+                                  | (ulong) bytes[offset + 4] << 8 | (ulong) bytes[offset + 5] << 0;
+                            readSize = 6;
+                        }
+                        else if (rest == 7)
+                        {
+                            key = (ulong) bytes[offset] << 48 | (ulong) bytes[offset + 1] << 40 |
+                                  (ulong) bytes[offset + 2] << 32 | (ulong) bytes[offset + 3] << 24
+                                  | (ulong) bytes[offset + 4] << 16 | (ulong) bytes[offset + 5] << 8 |
+                                  (ulong) bytes[offset + 6] << 0;
+                            readSize = 7;
+                        }
+                        else
+                        {
+                            ThrowNotSupportedLength();
+                            return default;
                         }
                     }
 

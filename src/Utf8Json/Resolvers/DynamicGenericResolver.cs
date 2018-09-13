@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using Spreads.Serialization.Utf8Json.Resolvers.Internal;
 using System.Collections.ObjectModel;
 #if SPREADS
+using Spreads.Collections.Internal;
 using Spreads.DataTypes;
 #endif
 #if NETSTANDARD
@@ -133,6 +134,10 @@ namespace Spreads.Serialization.Utf8Json.Resolvers.Internal
                 else if (genericType == typeof(Timestamped<>))
                 {
                     return CreateInstance(typeof(TimestampedFormatter<>), ti.GenericTypeArguments);
+                }
+                else if (genericType == typeof(VectorStorage<>))
+                {
+                    return CreateInstance(typeof(VectorStorageFormatter<>), ti.GenericTypeArguments);
                 }
 #endif
 

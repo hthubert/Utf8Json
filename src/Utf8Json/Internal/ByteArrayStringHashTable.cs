@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
+using Spreads.Buffers;
 
 namespace Spreads.Serialization.Utf8Json.Internal
 {
@@ -73,17 +74,17 @@ namespace Spreads.Serialization.Utf8Json.Internal
             return true;
         }
 
-        public bool TryGetValue(ArraySegment<byte> key, out T value)
+        public bool TryGetValue(DirectBuffer key, out T value)
         {
             var table = buckets;
-            var hash = ByteArrayGetHashCode(key.Array, key.Offset, key.Count);
+            var hash = ByteArrayGetHashCode(key.Span, 0, key.Length);
             var entry = table[hash & indexFor];
 
             if (entry == null) goto NOT_FOUND;
 
             {
                 var v = entry[0];
-                if (ByteArrayComparer.Equals(key.Array, key.Offset, key.Count, v.Key))
+                if (ByteArrayComparer.Equals(key.Span, 0, key.Length, v.Key))
                 {
                     value = v.Value;
                     return true;
@@ -93,7 +94,7 @@ namespace Spreads.Serialization.Utf8Json.Internal
             for (int i = 1; i < entry.Length; i++)
             {
                 var v = entry[i];
-                if (ByteArrayComparer.Equals(key.Array, key.Offset, key.Count, v.Key))
+                if (ByteArrayComparer.Equals(key.Span, 0, key.Length, v.Key))
                 {
                     value = v.Value;
                     return true;
@@ -112,7 +113,7 @@ namespace Spreads.Serialization.Utf8Json.Internal
 #if NETSTANDARD
         [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
 #endif
-        static ulong ByteArrayGetHashCode(byte[] x, int offset, int count)
+        static ulong ByteArrayGetHashCode(Span<byte> x, int offset, int count)
         {
 #if NETSTANDARD
             // FarmHash https://github.com/google/farmhash

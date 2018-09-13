@@ -28,7 +28,7 @@ namespace Spreads.Serialization.Utf8Json.Formatters
         {
             var key = reader.ReadStringSegmentRaw();
             int _;
-            return NumberConverter.ReadSByte(key.Array, key.Offset, out _);
+            return NumberConverter.ReadSByte(key, 0, out _);
         }
     }
 
@@ -75,7 +75,7 @@ namespace Spreads.Serialization.Utf8Json.Formatters
 
             var key = reader.ReadStringSegmentRaw();
             int _;
-            return NumberConverter.ReadSByte(key.Array, key.Offset, out _);
+            return NumberConverter.ReadSByte(key, 0, out _);
         }
     }
 
@@ -158,7 +158,7 @@ namespace Spreads.Serialization.Utf8Json.Formatters
         {
             var key = reader.ReadStringSegmentRaw();
             int _;
-            return NumberConverter.ReadInt16(key.Array, key.Offset, out _);
+            return NumberConverter.ReadInt16(key, 0, out _);
         }
     }
 
@@ -205,7 +205,7 @@ namespace Spreads.Serialization.Utf8Json.Formatters
 
             var key = reader.ReadStringSegmentRaw();
             int _;
-            return NumberConverter.ReadInt16(key.Array, key.Offset, out _);
+            return NumberConverter.ReadInt16(key, 0, out _);
         }
     }
 
@@ -288,7 +288,7 @@ namespace Spreads.Serialization.Utf8Json.Formatters
         {
             var key = reader.ReadStringSegmentRaw();
             int _;
-            return NumberConverter.ReadInt32(key.Array, key.Offset, out _);
+            return NumberConverter.ReadInt32(key, 0, out _);
         }
     }
 
@@ -335,7 +335,7 @@ namespace Spreads.Serialization.Utf8Json.Formatters
 
             var key = reader.ReadStringSegmentRaw();
             int _;
-            return NumberConverter.ReadInt32(key.Array, key.Offset, out _);
+            return NumberConverter.ReadInt32(key, 0, out _);
         }
     }
 
@@ -418,7 +418,7 @@ namespace Spreads.Serialization.Utf8Json.Formatters
         {
             var key = reader.ReadStringSegmentRaw();
             int _;
-            return NumberConverter.ReadInt64(key.Array, key.Offset, out _);
+            return NumberConverter.ReadInt64(key, 0, out _);
         }
     }
 
@@ -465,7 +465,7 @@ namespace Spreads.Serialization.Utf8Json.Formatters
 
             var key = reader.ReadStringSegmentRaw();
             int _;
-            return NumberConverter.ReadInt64(key.Array, key.Offset, out _);
+            return NumberConverter.ReadInt64(key, 0, out _);
         }
     }
 
@@ -548,7 +548,7 @@ namespace Spreads.Serialization.Utf8Json.Formatters
         {
             var key = reader.ReadStringSegmentRaw();
             int _;
-            return NumberConverter.ReadByte(key.Array, key.Offset, out _);
+            return NumberConverter.ReadByte(key, 0, out _);
         }
     }
 
@@ -595,7 +595,7 @@ namespace Spreads.Serialization.Utf8Json.Formatters
 
             var key = reader.ReadStringSegmentRaw();
             int _;
-            return NumberConverter.ReadByte(key.Array, key.Offset, out _);
+            return NumberConverter.ReadByte(key, 0, out _);
         }
     }
 
@@ -625,7 +625,7 @@ namespace Spreads.Serialization.Utf8Json.Formatters
         {
             var key = reader.ReadStringSegmentRaw();
             int _;
-            return NumberConverter.ReadUInt16(key.Array, key.Offset, out _);
+            return NumberConverter.ReadUInt16(key, 0, out _);
         }
     }
 
@@ -672,7 +672,7 @@ namespace Spreads.Serialization.Utf8Json.Formatters
 
             var key = reader.ReadStringSegmentRaw();
             int _;
-            return NumberConverter.ReadUInt16(key.Array, key.Offset, out _);
+            return NumberConverter.ReadUInt16(key, 0, out _);
         }
     }
 
@@ -755,7 +755,7 @@ namespace Spreads.Serialization.Utf8Json.Formatters
         {
             var key = reader.ReadStringSegmentRaw();
             int _;
-            return NumberConverter.ReadUInt32(key.Array, key.Offset, out _);
+            return NumberConverter.ReadUInt32(key, 0, out _);
         }
     }
 
@@ -802,7 +802,7 @@ namespace Spreads.Serialization.Utf8Json.Formatters
 
             var key = reader.ReadStringSegmentRaw();
             int _;
-            return NumberConverter.ReadUInt32(key.Array, key.Offset, out _);
+            return NumberConverter.ReadUInt32(key, 0, out _);
         }
     }
 
@@ -885,7 +885,7 @@ namespace Spreads.Serialization.Utf8Json.Formatters
         {
             var key = reader.ReadStringSegmentRaw();
             int _;
-            return NumberConverter.ReadUInt64(key.Array, key.Offset, out _);
+            return NumberConverter.ReadUInt64(key, 0, out _);
         }
     }
 
@@ -932,7 +932,7 @@ namespace Spreads.Serialization.Utf8Json.Formatters
 
             var key = reader.ReadStringSegmentRaw();
             int _;
-            return NumberConverter.ReadUInt64(key.Array, key.Offset, out _);
+            return NumberConverter.ReadUInt64(key, 0, out _);
         }
     }
 
@@ -1015,7 +1015,7 @@ namespace Spreads.Serialization.Utf8Json.Formatters
         {
             var key = reader.ReadStringSegmentRaw();
             int _;
-            return NumberConverter.ReadSingle(key.Array, key.Offset, out _);
+            return NumberConverter.ReadSingle(key, 0, out _);
         }
     }
 
@@ -1062,7 +1062,7 @@ namespace Spreads.Serialization.Utf8Json.Formatters
 
             var key = reader.ReadStringSegmentRaw();
             int _;
-            return NumberConverter.ReadSingle(key.Array, key.Offset, out _);
+            return NumberConverter.ReadSingle(key, 0, out _);
         }
     }
 
@@ -1145,7 +1145,7 @@ namespace Spreads.Serialization.Utf8Json.Formatters
         {
             var key = reader.ReadStringSegmentRaw();
             int _;
-            return NumberConverter.ReadDouble(key.Array, key.Offset, out _);
+            return NumberConverter.ReadDouble(key, 0, out _);
         }
     }
 
@@ -1192,7 +1192,7 @@ namespace Spreads.Serialization.Utf8Json.Formatters
 
             var key = reader.ReadStringSegmentRaw();
             int _;
-            return NumberConverter.ReadDouble(key.Array, key.Offset, out _);
+            return NumberConverter.ReadDouble(key, 0, out _);
         }
     }
 
@@ -1275,7 +1275,7 @@ namespace Spreads.Serialization.Utf8Json.Formatters
         {
             var key = reader.ReadStringSegmentRaw();
             int _;
-            return NumberConverter.ReadBoolean(key.Array, key.Offset, out _);
+            return NumberConverter.ReadBoolean(key, 0, out _);
         }
     }
 
@@ -1322,7 +1322,7 @@ namespace Spreads.Serialization.Utf8Json.Formatters
 
             var key = reader.ReadStringSegmentRaw();
             int _;
-            return NumberConverter.ReadBoolean(key.Array, key.Offset, out _);
+            return NumberConverter.ReadBoolean(key, 0, out _);
         }
     }
 

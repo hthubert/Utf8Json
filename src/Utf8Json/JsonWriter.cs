@@ -19,16 +19,26 @@ namespace Spreads.Serialization.Utf8Json
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void WriteRaw(ref JsonWriter writer, byte[] src)
         {
-            BinaryUtil.EnsureCapacity(ref writer.buffer, writer.offset, src.Length);
-            if (src.Length > 0) { Unsafe.CopyBlockUnaligned(ref writer.buffer[writer.offset], ref src[0], (uint)src.Length); }
-            writer.offset += src.Length;
+            if (src.Length > 0)
+            {
+                var srcLen = src.Length;
+                var offset = writer.offset;
+
+                BinaryUtil.EnsureCapacity(ref writer.buffer, offset, srcLen);
+                Unsafe.CopyBlockUnaligned(ref writer.buffer[offset], ref src[0], (uint)srcLen);
+
+                writer.offset += srcLen;
+            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void WriteRawSegment(ref JsonWriter writer, ArraySegment<byte> src)
         {
             BinaryUtil.EnsureCapacity(ref writer.buffer, writer.offset, src.Count);
-            if (src.Count > 0) { Unsafe.CopyBlockUnaligned(ref writer.buffer[writer.offset], ref src.Array[src.Offset], (uint)src.Count); }
+            if (src.Count > 0)
+            {
+                Unsafe.CopyBlockUnaligned(ref writer.buffer[writer.offset], ref src.Array[src.Offset], (uint)src.Count);
+            }
             writer.offset += src.Count;
         }
 
@@ -88,13 +98,13 @@ namespace Spreads.Serialization.Utf8Json
 
         public JsonWriter(byte[] initialBuffer)
         {
-            this.buffer = initialBuffer;
-            this.offset = 0;
+            buffer = initialBuffer;
+            offset = 0;
         }
 
         public JsonWriter(byte[] initialBuffer, int offset)
         {
-            this.buffer = initialBuffer;
+            buffer = initialBuffer;
             this.offset = offset;
         }
 
@@ -320,7 +330,7 @@ namespace Spreads.Serialization.Utf8Json
 #endif
         public void WriteSingle(Single value)
         {
-            offset += Utf8Json.Internal.DoubleConversion.DoubleToStringConverter.GetBytes(ref buffer, offset, value);
+            offset += Internal.DoubleConversion.DoubleToStringConverter.GetBytes(ref buffer, offset, value);
         }
 
 #if NETSTANDARD
@@ -329,7 +339,7 @@ namespace Spreads.Serialization.Utf8Json
 #endif
         public void WriteDouble(double value)
         {
-            offset += Utf8Json.Internal.DoubleConversion.DoubleToStringConverter.GetBytes(ref buffer, offset, value);
+            offset += Internal.DoubleConversion.DoubleToStringConverter.GetBytes(ref buffer, offset, value);
         }
 
 #if NETSTANDARD
@@ -338,7 +348,7 @@ namespace Spreads.Serialization.Utf8Json
 #endif
         public void WriteByte(byte value)
         {
-            WriteUInt64((ulong)value);
+            WriteUInt64(value);
         }
 
 #if NETSTANDARD
@@ -347,7 +357,7 @@ namespace Spreads.Serialization.Utf8Json
 #endif
         public void WriteUInt16(ushort value)
         {
-            WriteUInt64((ulong)value);
+            WriteUInt64(value);
         }
 
 #if NETSTANDARD
@@ -356,7 +366,7 @@ namespace Spreads.Serialization.Utf8Json
 #endif
         public void WriteUInt32(uint value)
         {
-            WriteUInt64((ulong)value);
+            WriteUInt64(value);
         }
 
         public void WriteUInt64(ulong value)
@@ -370,7 +380,7 @@ namespace Spreads.Serialization.Utf8Json
 #endif
         public void WriteSByte(sbyte value)
         {
-            WriteInt64((long)value);
+            WriteInt64(value);
         }
 
 #if NETSTANDARD
@@ -379,7 +389,7 @@ namespace Spreads.Serialization.Utf8Json
 #endif
         public void WriteInt16(short value)
         {
-            WriteInt64((long)value);
+            WriteInt64(value);
         }
 
 #if NETSTANDARD
@@ -388,7 +398,7 @@ namespace Spreads.Serialization.Utf8Json
 #endif
         public void WriteInt32(int value)
         {
-            WriteInt64((long)value);
+            WriteInt64(value);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -421,7 +431,7 @@ namespace Spreads.Serialization.Utf8Json
             // for JIT Optimization, for-loop i < str.Length
             for (int i = 0; i < value.Length; i++)
             {
-                byte escapeChar = default(byte);
+                byte escapeChar;
                 switch (value[i])
                 {
                     case '"':
@@ -452,6 +462,7 @@ namespace Spreads.Serialization.Utf8Json
                         escapeChar = (byte)'t';
                         break;
                     // use switch jumptable
+                    // ReSharper disable RedundantCaseLabel
                     case (char)0:
                     case (char)1:
                     case (char)2:
@@ -538,6 +549,7 @@ namespace Spreads.Serialization.Utf8Json
                     case (char)89:
                     case (char)90:
                     case (char)91:
+                    // ReSharper restore RedundantCaseLabel
                     default:
                         continue;
                 }

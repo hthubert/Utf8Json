@@ -8,6 +8,7 @@ using Spreads.Serialization.Utf8Json.Formatters;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Reflection.Emit;
+using Spreads.Buffers;
 using Spreads.Serialization.Utf8Json.Resolvers.Internal;
 
 namespace Spreads.Serialization.Utf8Json.Resolvers
@@ -636,7 +637,7 @@ namespace Spreads.Serialization.Utf8Json.Resolvers.Internal
                     return true;
                 }, false, 1); // firstArgIndex:0 is this.
             }
-
+            
             return typeBuilder.CreateTypeInfo();
         }
 
@@ -1139,23 +1140,23 @@ namespace Spreads.Serialization.Utf8Json.Resolvers.Internal
                     automata.Add(JsonWriter.GetEncodedPropertyNameWithoutQuotation(info.Members[i].Name), i);
                 }
 
-                var baseBytes = il.DeclareLocal(typeof(byte[]));
-                var buffer = il.DeclareLocal(typeof(byte).MakeByRefType(), true);
-                var keyArraySegment = il.DeclareLocal(typeof(ArraySegment<byte>));
+                // var baseBytes = il.DeclareLocal(typeof(DirectBuffer));
+                // var buffer = il.DeclareLocal(typeof(byte).MakeByRefType(), true); // XX
+                var keyArraySegment = il.DeclareLocal(typeof(DirectBuffer));
                 var longKey = il.DeclareLocal(typeof(ulong));
                 var p = il.DeclareLocal(typeof(byte*));
                 var rest = il.DeclareLocal(typeof(int));
 
                 // baseBytes = reader.GetBufferUnsafe();
                 // fixed (byte* buffer = &baseBytes[0]) {
-                argReader.EmitLoad();
-                il.EmitCall(EmitInfo.JsonReader.GetBufferUnsafe);
-                il.EmitStloc(baseBytes);
+                //argReader.EmitLoad();
+                //il.EmitCall(EmitInfo.JsonReader.GetBufferUnsafe);
+                //il.EmitStloc(baseBytes);
 
-                il.EmitLdloc(baseBytes);
-                il.EmitLdc_I4(0);
-                il.Emit(OpCodes.Ldelema, typeof(byte));
-                il.EmitStloc(buffer);
+                //il.EmitLdloc(baseBytes);
+                //il.EmitLdc_I4(0);
+                //il.Emit(OpCodes.Ldelema, typeof(byte));
+                //il.EmitStloc(buffer);
 
                 // while (!reader.ReadIsEndObjectWithSkipValueSeparator(ref count)) // "}", skip "," when count != 0
                 var continueWhile = il.DefineLabel();
@@ -1174,16 +1175,16 @@ namespace Spreads.Serialization.Utf8Json.Resolvers.Internal
                 il.EmitStloc(keyArraySegment);
 
                 // p = buffer + arraySegment.Offset
-                il.EmitLdloc(buffer);
-                il.Emit(OpCodes.Conv_I);
+                //il.EmitLdloc(buffer);
+                //il.Emit(OpCodes.Conv_I);
                 il.EmitLdloca(keyArraySegment);
-                il.EmitCall(typeof(ArraySegment<byte>).GetRuntimeProperty("Offset").GetGetMethod());
-                il.Emit(OpCodes.Add);
+                il.EmitCall(typeof(DirectBuffer).GetRuntimeProperty("Data").GetGetMethod());
+                //il.Emit(OpCodes.Add);
                 il.EmitStloc(p);
 
                 // rest = arraySegment.Count
                 il.EmitLdloca(keyArraySegment);
-                il.EmitCall(typeof(ArraySegment<byte>).GetRuntimeProperty("Count").GetGetMethod());
+                il.EmitCall(typeof(DirectBuffer).GetRuntimeProperty("Length").GetGetMethod());
                 il.EmitStloc(rest);
 
                 // if(rest == 0) goto End
@@ -1222,9 +1223,9 @@ namespace Spreads.Serialization.Utf8Json.Resolvers.Internal
                 il.MarkLabel(breakWhile);
 
                 // end fixed
-                il.Emit(OpCodes.Ldc_I4_0);
-                il.Emit(OpCodes.Conv_U);
-                il.EmitStloc(buffer);
+                //il.Emit(OpCodes.Ldc_I4_0);
+                //il.Emit(OpCodes.Conv_U);
+                //il.EmitStloc(buffer);
             }
 
             // create result object
@@ -1237,6 +1238,44 @@ namespace Spreads.Serialization.Utf8Json.Resolvers.Internal
 
             il.Emit(OpCodes.Ret);
         }
+
+        //public unsafe sealed Utf8JsonTests.TestValue Deserialize(ref JsonReader A_1, IJsonFormatterResolver A_2)
+        //{
+        //    if (A_1.ReadIsNull())
+        //    {
+        //        throw new InvalidOperationException("json value is null, struct is not supported");
+        //    }
+        //    A_1.ReadIsBeginObjectWithVerify();
+        //    byte[] bufferUnsafe = A_1.GetBufferUnsafe();
+        //    int num2;
+        //    fixed (byte* ptr = &bufferUnsafe[0])
+        //    {
+        //        int num;
+        //        while (!A_1.ReadIsEndObjectWithSkipValueSeparator(ref num))
+        //        {
+        //            ArraySegment<byte> arraySegment = A_1.ReadPropertyNameSegmentRaw();
+        //            byte* ptr2 = ptr + arraySegment.Offset;
+        //            int count = arraySegment.Count;
+        //            if (count != 0)
+        //            {
+        //                ulong key = AutomataKeyGen.GetKey(ref ptr2, ref count);
+        //                if (count == 0)
+        //                {
+        //                    if (key == 7173454UL)
+        //                    {
+        //                        num2 = A_1.ReadInt32();
+        //                        continue;
+        //                    }
+        //                }
+        //            }
+        //            A_1.ReadNextBlock();
+        //        }
+        //    }
+        //    return new Utf8JsonTests.TestValue
+        //    {
+        //        Num = num2
+        //    };
+        //}
 
         static void EmitDeserializeValue(ILGenerator il, DeserializeInfo info, int index, Func<int, MetaMember, bool> tryEmitLoadCustomFormatter, ArgumentField reader, ArgumentField argResolver)
         {
@@ -1517,7 +1556,7 @@ namespace Spreads.Serialization.Utf8Json.Resolvers.Internal
                 public static readonly MethodInfo ReadPropertyNameSegmentUnsafe = ExpressionUtility.GetMethodInfo((Utf8Json.JsonReader reader) => reader.ReadPropertyNameSegmentRaw());
                 public static readonly MethodInfo ReadNextBlock = ExpressionUtility.GetMethodInfo((Utf8Json.JsonReader reader) => reader.ReadNextBlock());
                 public static readonly MethodInfo GetBufferUnsafe = ExpressionUtility.GetMethodInfo((Utf8Json.JsonReader reader) => reader.GetBufferUnsafe());
-                public static readonly MethodInfo GetCurrentOffsetUnsafe = ExpressionUtility.GetMethodInfo((Utf8Json.JsonReader reader) => reader.GetCurrentOffsetUnsafe());
+                // public static readonly MethodInfo GetCurrentOffsetUnsafe = ExpressionUtility.GetMethodInfo((Utf8Json.JsonReader reader) => reader.GetCurrentOffsetUnsafe());
 
                 static JsonReader()
                 {
