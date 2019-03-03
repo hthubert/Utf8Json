@@ -711,7 +711,7 @@ namespace Spreads.Serialization.Utf8Json
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private DirectBuffer ReadStringSegmentCore() // , out int resultOffset, out int resultLength)
+        internal DirectBuffer ReadStringSegmentCore() // , out int resultOffset, out int resultLength)
         {
             // SkipWhiteSpace is already called from IsNull
             ref OffHeapBuffer<byte> builder = ref StringBuilderCache.Buffer;

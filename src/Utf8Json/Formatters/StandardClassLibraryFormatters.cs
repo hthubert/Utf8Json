@@ -293,17 +293,18 @@ namespace Spreads.Serialization.Utf8Json.Formatters
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Serialize(ref JsonWriter writer, decimal value, IJsonFormatterResolver formatterResolver)
+        public unsafe void Serialize(ref JsonWriter writer, decimal value, IJsonFormatterResolver formatterResolver)
         {
             if (serializeAsString)
             {
-                
                 writer.WriteString(value.ToString(CultureInfo.InvariantCulture));
             }
             else
             {
                 // write as number format.
-                writer.WriteRaw(StringEncoding.UTF8.GetBytes(value.ToString(CultureInfo.InvariantCulture)));
+                Span<byte> span = stackalloc byte[32];
+                System.Buffers.Text.Utf8Formatter.TryFormat(value, span, out var written);
+                writer.WriteRawSpan(span.Slice(0, written));
             }
         }
 
@@ -311,20 +312,25 @@ namespace Spreads.Serialization.Utf8Json.Formatters
         public decimal Deserialize(ref JsonReader reader, IJsonFormatterResolver formatterResolver)
         {
             var token = reader.GetCurrentJsonToken();
+            DirectBuffer number;
             if (token == JsonToken.Number)
             {
-                var number = reader.ReadNumberSegment();
-                return decimal.Parse(StringEncoding.UTF8.GetString(number), NumberStyles.Float, CultureInfo.InvariantCulture);
+                number = reader.ReadNumberSegment();
+                // return decimal.Parse(StringEncoding.UTF8.GetString(number), NumberStyles.Float, CultureInfo.InvariantCulture);
             }
             else if (token == JsonToken.String)
             {
-                return decimal.Parse(reader.ReadString(), NumberStyles.Float, CultureInfo.InvariantCulture);
+                number = reader.ReadStringSegmentCore();
+                // return decimal.Parse(reader.ReadString(), NumberStyles.Float, CultureInfo.InvariantCulture);
             }
             else
             {
                 ThrowInvalidToken(token);
-                return default(Decimal);
+                return default;
             }
+
+            System.Buffers.Text.Utf8Parser.TryParse(number.Span, out decimal value, out _);
+            return value;
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
