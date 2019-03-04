@@ -1,15 +1,15 @@
-﻿using System;
+﻿using Spreads.Buffers;
+using System;
 using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Text;
-using Spreads.Buffers;
 
 namespace Spreads.Serialization.Utf8Json.Internal.DoubleConversion
 {
 #pragma warning disable 660
 #pragma warning disable 661
 
-    internal struct Iterator
+    internal unsafe struct Iterator
     {
         private DirectBuffer buffer;
         private int offset;
@@ -26,7 +26,7 @@ namespace Spreads.Serialization.Utf8Json.Internal.DoubleConversion
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
-                return buffer[offset];
+                return buffer.Data[offset];
             }
         }
 
@@ -35,7 +35,7 @@ namespace Spreads.Serialization.Utf8Json.Internal.DoubleConversion
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
-                return unchecked((uint)(buffer[offset] - '0')) <= 9;
+                return unchecked((uint)(buffer.Data[offset] - '0')) <= 9;
             }
         }
 
@@ -73,49 +73,49 @@ namespace Spreads.Serialization.Utf8Json.Internal.DoubleConversion
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool operator ==(in Iterator lhs, char rhs)
         {
-            return lhs.buffer[lhs.offset] == (byte)rhs;
+            return lhs.buffer.Data[lhs.offset] == (byte)rhs;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool operator !=(in Iterator lhs, char rhs)
         {
-            return lhs.buffer[lhs.offset] != (byte)rhs;
+            return lhs.buffer.Data[lhs.offset] != (byte)rhs;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool operator ==(in Iterator lhs, byte rhs)
         {
-            return lhs.buffer[lhs.offset] == (byte)rhs;
+            return lhs.buffer.Data[lhs.offset] == (byte)rhs;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool operator !=(in Iterator lhs, byte rhs)
         {
-            return lhs.buffer[lhs.offset] != (byte)rhs;
+            return lhs.buffer.Data[lhs.offset] != (byte)rhs;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool operator >=(in Iterator lhs, char rhs)
         {
-            return lhs.buffer[lhs.offset] >= (byte)rhs;
+            return lhs.buffer.Data[lhs.offset] >= (byte)rhs;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool operator <=(in Iterator lhs, char rhs)
         {
-            return lhs.buffer[lhs.offset] <= (byte)rhs;
+            return lhs.buffer.Data[lhs.offset] <= (byte)rhs;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool operator >(in Iterator lhs, char rhs)
         {
-            return lhs.buffer[lhs.offset] > (byte)rhs;
+            return lhs.buffer.Data[lhs.offset] > (byte)rhs;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool operator <(in Iterator lhs, char rhs)
         {
-            return lhs.buffer[lhs.offset] < (byte)rhs;
+            return lhs.buffer.Data[lhs.offset] < (byte)rhs;
         }
     }
 
@@ -429,7 +429,7 @@ namespace Spreads.Serialization.Utf8Json.Internal.DoubleConversion
             // Copy significant digits of the integer part (if any) to the buffer.
             // while (current >= '0' && current <= '9')
             byte curVal;
-            while ( unchecked((uint)((curVal = current.Value) - '0')) <= 9)
+            while (unchecked((uint)((curVal = current.Value) - '0')) <= 9)
             {
                 if (significant_digits < kMaxSignificantDigits)
                 {
@@ -554,7 +554,7 @@ namespace Spreads.Serialization.Utf8Json.Internal.DoubleConversion
                 }
 
                 if (current == end || !current.IsDigit)
-                    {
+                {
                     if (allow_trailing_junk)
                     {
                         goto parsing_done;
@@ -600,7 +600,7 @@ namespace Spreads.Serialization.Utf8Json.Internal.DoubleConversion
                 AdvanceToNonspace(ref current, end);
             }
 
-            parsing_done:
+        parsing_done:
             exponent += insignificant_digits;
 
             //if (octal)

@@ -16,18 +16,20 @@ namespace Spreads.Serialization.Utf8Json
 
     public unsafe struct JsonReader
     {
-        private static OffHeapBuffer<byte> nullTokenSegment = new OffHeapBuffer<byte>(4);
+        private static readonly OffHeapBuffer<byte> nullTokenSegment = CreateNullSegment();
 
         // private static readonly ArraySegment<byte> nullTokenSegment = new ArraySegment<byte>(new byte[] { 110, 117, 108, 108 }, 0, 4);
         private static readonly byte[] bom = Encoding.UTF8.GetPreamble();
 
-        static JsonReader()
+        private static OffHeapBuffer<byte> CreateNullSegment()
         {
-            var db = nullTokenSegment.DirectBuffer;
+            var seg = new OffHeapBuffer<byte>(4);
+            var db = seg.DirectBuffer;
             db[0] = 110;
             db[1] = 117;
             db[2] = 108;
             db[3] = 108;
+            return seg;
         }
 
         private readonly DirectBuffer bytes;
@@ -301,11 +303,15 @@ namespace Spreads.Serialization.Utf8Json
             {
                 return false;
             }
-            Vector<byte> vec = new Vector<byte>(bytes[offset]);
 
-            if (!Vector.EqualsAny(vec, WSCandidates))
+            if (Vector.IsHardwareAccelerated)
             {
-                return true;
+                // Json written with this lib should not have WS, this is the fast path
+                var vec = new Vector<byte>(bytes.Data[offset]);
+                if (!Vector.EqualsAny(vec, WSCandidates))
+                {
+                    return true;
+                }
             }
 
             return SkipWhiteSpaceSlow();
@@ -318,7 +324,7 @@ namespace Spreads.Serialization.Utf8Json
 
             for (int i = offset; i < _length; i++)
             {
-                var bi = bytes[i];
+                var bi = bytes.Data[i];
                 if (bi == 0x20 || bi == 0x09 || bi == 0x0A || bi == 0x0D)
                 {
                     continue;
@@ -350,15 +356,15 @@ namespace Spreads.Serialization.Utf8Json
             bytes[3] = 0x0D;
             bytes[4] = (byte)'/';
             bytes[5] = (byte)'n';
-            
+
             return new Vector<byte>(bytes);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool ReadIsNull()
         {
-            Vector<byte> vec = new Vector<byte>(bytes[offset]);
-            if (!Vector.EqualsAny(vec, NullCandidates))
+            Vector<byte> vec = new Vector<byte>(*(bytes.Data + offset));
+            if (Vector.IsHardwareAccelerated && !Vector.EqualsAny(vec, NullCandidates))
             {
                 return false;
             }
@@ -382,7 +388,7 @@ namespace Spreads.Serialization.Utf8Json
                 return false;
             }
 
-            ERROR:
+        ERROR:
             CreateParsingExceptionNull();
             return default;
         }
@@ -484,7 +490,7 @@ namespace Spreads.Serialization.Utf8Json
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool ReadIsBeginObject()
         {
-            if (SkipWhiteSpace() && bytes[offset] == '{')
+            if (SkipWhiteSpace() && bytes.Data[offset] == '{')
             {
                 offset += 1;
                 return true;
@@ -513,7 +519,7 @@ namespace Spreads.Serialization.Utf8Json
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool ReadIsEndObject()
         {
-            if (bytes[offset] == '}')
+            if (bytes.Data[offset] == '}')
             {
                 offset += 1;
                 return true;
@@ -525,7 +531,7 @@ namespace Spreads.Serialization.Utf8Json
         [MethodImpl(MethodImplOptions.NoInlining)]
         private bool ReadIsEndObjectSlow()
         {
-            if (SkipWhiteSpace() && bytes[offset] == '}')
+            if (SkipWhiteSpace() && bytes.Data[offset] == '}')
             {
                 offset += 1;
                 return true;
@@ -554,7 +560,7 @@ namespace Spreads.Serialization.Utf8Json
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool ReadIsEndObjectWithSkipValueSeparator(ref int count)
         {
-            var bo = bytes[offset];
+            var bo = bytes.Data[offset];
             var isEndObjFast = bo == '}';
             if (isEndObjFast || (bo == ',' && count++ != 0))
             {
@@ -562,7 +568,7 @@ namespace Spreads.Serialization.Utf8Json
                 return isEndObjFast;
             }
 
-            if (SkipWhiteSpace() && bytes[offset] == '}')
+            if (SkipWhiteSpace() && bytes.Data[offset] == '}')
             {
                 offset += 1;
                 return true;
@@ -631,7 +637,7 @@ namespace Spreads.Serialization.Utf8Json
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool ReadIsValueSeparator()
         {
-            if (bytes[offset] == ',')
+            if (bytes.Data[offset] == ',')
             {
                 offset += 1;
                 return true;
@@ -643,7 +649,7 @@ namespace Spreads.Serialization.Utf8Json
         [MethodImpl(MethodImplOptions.NoInlining)]
         private bool ReadIsValueSeparatorSlow()
         {
-            if (SkipWhiteSpace() && bytes[offset] == ',')
+            if (SkipWhiteSpace() && bytes.Data[offset] == ',')
             {
                 offset += 1;
                 return true;
@@ -672,7 +678,7 @@ namespace Spreads.Serialization.Utf8Json
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool ReadIsNameSeparator()
         {
-            if (bytes[offset] == ':')
+            if (bytes.Data[offset] == ':')
             {
                 offset += 1;
                 return true;
@@ -684,7 +690,7 @@ namespace Spreads.Serialization.Utf8Json
         [MethodImpl(MethodImplOptions.NoInlining)]
         private bool ReadIsNameSeparatorSlow()
         {
-            if (SkipWhiteSpace() && bytes[offset] == ':')
+            if (SkipWhiteSpace() && bytes.Data[offset] == ':')
             {
                 offset += 1;
                 return true;
@@ -713,13 +719,15 @@ namespace Spreads.Serialization.Utf8Json
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal DirectBuffer ReadStringSegmentCore() // , out int resultOffset, out int resultLength)
         {
+            // TODO (Spreads) test without ref var
+
             // SkipWhiteSpace is already called from IsNull
             ref OffHeapBuffer<byte> builder = ref StringBuilderCache.Buffer;
             var builderOffset = 0;
             ref OffHeapBuffer<char> codePointStringBuffer = ref StringBuilderCache.CodePointStringBuffer;
             var codePointStringOffet = 0;
 
-            if (bytes[offset] != '\"')
+            if (bytes.Data[offset] != '\"')
             {
                 CreateParsingExceptionStringBeginToken();
             }
@@ -731,15 +739,15 @@ namespace Spreads.Serialization.Utf8Json
             for (int i = offset; i < _length; i++)
             {
                 byte escapeCharacter = 0;
-                switch (bytes[i])
+                switch (bytes.Data[i])
                 {
                     case (byte)'\\': // escape character
-                        switch ((char)bytes[i + 1])
+                        switch ((char)bytes.Data[i + 1])
                         {
                             case '"':
                             case '\\':
                             case '/':
-                                escapeCharacter = bytes[i + 1];
+                                escapeCharacter = bytes.Data[i + 1];
                                 goto COPY;
                             case 'b':
                                 escapeCharacter = (byte)'\b';
@@ -779,10 +787,10 @@ namespace Spreads.Serialization.Utf8Json
                                     // Array.Resize(ref codePointStringBuffer, codePointStringBuffer.Length * 2);
                                 }
 
-                                var a = (char)bytes[i + 2];
-                                var b = (char)bytes[i + 3];
-                                var c = (char)bytes[i + 4];
-                                var d = (char)bytes[i + 5];
+                                var a = (char)bytes.Data[i + 2];
+                                var b = (char)bytes.Data[i + 3];
+                                var c = (char)bytes.Data[i + 4];
+                                var d = (char)bytes.Data[i + 5];
                                 var codepoint = GetCodePoint(a, b, c, d);
                                 codePointStringBuffer[codePointStringOffet++] = (char)codepoint;
                                 i += 5;
@@ -815,7 +823,7 @@ namespace Spreads.Serialization.Utf8Json
                         continue;
                 }
 
-                COPY:
+            COPY:
                 {
                     // if (builder == null) builder = StringBuilderCache.GetBuffer();
                     if (codePointStringOffet != 0)
@@ -848,7 +856,7 @@ namespace Spreads.Serialization.Utf8Json
             CreateParsingExceptionStringEndToken();
             return default;
 
-            END:
+        END:
             if (builderOffset == 0 && codePointStringOffet == 0) // no escape
             {
                 return bytes.Slice(from, offset - 1 - from);
@@ -961,10 +969,11 @@ namespace Spreads.Serialization.Utf8Json
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public DirectBuffer ReadStringSegmentRaw()
         {
-            DirectBuffer key;
+            // TODO Global constants
+            const byte quote = (byte)'\"';
+            const byte bs = (byte)'\\';
 
-            // var bp = bytes[offset++];
-            if (bytes[offset] != '\"')
+            if (*(bytes.Data + offset) != quote)
             {
                 if (ReadIsNull())
                 {
@@ -973,7 +982,7 @@ namespace Spreads.Serialization.Utf8Json
 
                 // SkipWhiteSpace is already called from ReadIsNull
 
-                if (bytes[offset] != '\"')
+                if (*(bytes.Data + offset) != quote)
                 {
                     CreateParsingExceptionNotQuote();
                 }
@@ -983,27 +992,90 @@ namespace Spreads.Serialization.Utf8Json
 
             var from = offset;
 
-            for (int i = offset; i < _length; i++)
+#if USE_SYSTEM_TEXT_JSON // - this is actually slower for this case, need review. Maybe could be useful for string values.
+            // https://tools.ietf.org/html/rfc8259
+            // Does the span contain '"', '\',  or any control characters (i.e. 0 to 31)
+            // IndexOfAny(34, 92, < 32)
+            // Borrowed from System.Text.Json.JsonReaderHelper:
+            var idx = offset + Algorithms.VectorSearch.IndexOfOrLessThan(
+                            ref bytes.Data[offset],
+                            (byte)'\"',
+                            (byte)'\\',
+                            lessThan: 32, // Space ' '
+                            _length - offset);
+            if (bytes.Data[idx] == '\"')
             {
-                var bi = bytes[i];
-                if (bi == (char)'\"')
+                offset = idx + 1;
+                goto OK;
+            }
+#else
+            var idx = offset;
+#endif
+            // ReadStringSegmentRaw is used to read property names. They are usually
+            // human-readable and very often more than 3 symbols, so we access
+            // memory once per 4/8 bytes and most often there is no quote. If there
+            // is one we already have it's index and go to per-byte processing for there.
+
+            if (IntPtr.Size == 8)
+            {
+                for (; idx + 8 < _length; idx += 8)
+                {
+                    var bi = Unsafe.ReadUnaligned<EightBytes>(bytes.Data + idx);
+                    var qi = bi.QuoteIndex(out var unescaped);
+
+                    if (qi >= 0)
+                    {
+                        if (unescaped)
+                        {
+                            offset = idx + qi + 1;
+                            goto OK;
+                        }
+
+                        idx += qi;
+                        break;
+                    }
+                }
+            }
+            else
+            {
+                for (; idx + 4 < _length; idx += 4)
+                {
+                    var bi = Unsafe.ReadUnaligned<FourBytes>(bytes.Data + idx);
+                    var qi = bi.QuoteIndex(out var unescaped);
+
+                    if (qi >= 0)
+                    {
+                        if (unescaped)
+                        {
+                            offset = idx + qi + 1;
+                            goto OK;
+                        }
+
+                        idx += qi;
+                        break;
+                    }
+                }
+            }
+
+            for (var i = idx; i < _length; i++)
+            {
+                var bi = bytes.Data[i];
+
+                if (bi == quote)
                 {
                     // is escape?
-                    if (bytes[i - 1] == (char)'\\')
-                    {
-                        continue;
-                    }
-                    else
+                    if (bytes.Data[i - 1] != bs || bytes.Data[i - 2] == bs)
                     {
                         offset = i + 1;
                         goto OK;
                     }
                 }
             }
+
             CreateParsingExceptionMessageNotFoundEndString();
 
-            OK:
-            key = bytes.Slice(from, offset - from - 1); // remove \"
+        OK:
+            var key = bytes.Slice(@from, offset - @from - 1);
 
             return key;
         }
@@ -1033,20 +1105,20 @@ namespace Spreads.Serialization.Utf8Json
         public bool ReadBoolean()
         {
             SkipWhiteSpace();
-            if (bytes[offset] == 't')
+            if (bytes.Data[offset] == 't')
             {
-                if (bytes[offset + 1] != 'r') goto ERROR_TRUE;
-                if (bytes[offset + 2] != 'u') goto ERROR_TRUE;
-                if (bytes[offset + 3] != 'e') goto ERROR_TRUE;
+                if (bytes.Data[offset + 1] != 'r') goto ERROR_TRUE;
+                if (bytes.Data[offset + 2] != 'u') goto ERROR_TRUE;
+                if (bytes.Data[offset + 3] != 'e') goto ERROR_TRUE;
                 offset += 4;
                 return true;
             }
-            else if (bytes[offset] == 'f')
+            else if (bytes.Data[offset] == 'f')
             {
-                if (bytes[offset + 1] != 'a') goto ERROR_FALSE;
-                if (bytes[offset + 2] != 'l') goto ERROR_FALSE;
-                if (bytes[offset + 3] != 's') goto ERROR_FALSE;
-                if (bytes[offset + 4] != 'e') goto ERROR_FALSE;
+                if (bytes.Data[offset + 1] != 'a') goto ERROR_FALSE;
+                if (bytes.Data[offset + 2] != 'l') goto ERROR_FALSE;
+                if (bytes.Data[offset + 3] != 's') goto ERROR_FALSE;
+                if (bytes.Data[offset + 4] != 'e') goto ERROR_FALSE;
                 offset += 5;
                 return false;
             }
@@ -1055,9 +1127,9 @@ namespace Spreads.Serialization.Utf8Json
                 CreateParsingException("true | false");
             }
 
-            ERROR_TRUE:
+        ERROR_TRUE:
             CreateParsingException("true");
-            ERROR_FALSE:
+        ERROR_FALSE:
             CreateParsingException("false");
             return default;
         }
@@ -1102,10 +1174,10 @@ namespace Spreads.Serialization.Utf8Json
                         offset += 1; // position is "\"";
                         for (int i = offset; i < _length; i++)
                         {
-                            if (bytes[i] == (char)'\"')
+                            if (bytes.Data[i] == (char)'\"')
                             {
                                 // is escape?
-                                if (bytes[i - 1] == (char)'\\')
+                                if (bytes.Data[i - 1] == (char)'\\')
                                 {
                                     continue;
                                 }
@@ -1124,7 +1196,7 @@ namespace Spreads.Serialization.Utf8Json
                     {
                         for (int i = offset; i < _length; i++)
                         {
-                            if (IsWordBreak(bytes[i]))
+                            if (IsWordBreak(bytes.Data[i]))
                             {
                                 offset = i;
                                 return;
@@ -1159,7 +1231,7 @@ namespace Spreads.Serialization.Utf8Json
         {
             var stack = 0;
 
-            AGAIN:
+        AGAIN:
             var token = GetCurrentJsonToken();
             switch (token)
             {
@@ -1269,16 +1341,20 @@ namespace Spreads.Serialization.Utf8Json
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ulong ReadUInt64()
         {
-            SkipWhiteSpace();
-
-            int readCount;
-            var v = NumberConverter.ReadUInt64(bytes, offset, out readCount);
-            if (readCount == 0)
+            if (SkipWhiteSpace())
             {
-                CreateParsingExceptionNumberToken();
+                int readCount;
+                var v = NumberConverter.ReadUInt64(bytes, offset, out readCount);
+                if (readCount == 0)
+                {
+                    CreateParsingExceptionNumberToken();
+                }
+                offset += readCount;
+                return v;
             }
-            offset += readCount;
-            return v;
+
+            CreateParsingExceptionNotInRange();
+            return default;
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
@@ -1330,7 +1406,7 @@ namespace Spreads.Serialization.Utf8Json
             }
             offset = _length;
 
-            END:
+        END:
             return bytes.Slice(initialOffset, offset - initialOffset);
         }
 

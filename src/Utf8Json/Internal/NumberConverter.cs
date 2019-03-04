@@ -1,12 +1,11 @@
 ﻿using System;
-using System.Buffers.Text;
-using System.Collections.Generic;
-using System.Text;
 using Spreads.Buffers;
 using Spreads.Serialization.Utf8Json.Internal.DoubleConversion;
 
 #if NETSTANDARD
+
 using System.Runtime.CompilerServices;
+
 #endif
 
 namespace Spreads.Serialization.Utf8Json.Internal
@@ -20,17 +19,19 @@ namespace Spreads.Serialization.Utf8Json.Internal
         /// 0 ~ 9
         /// </summary>
 #if NETSTANDARD
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
         public static bool IsNumber(byte c)
         {
-            return unchecked ((uint) (c - '0')) <= 9;
+            return unchecked((uint)(c - '0')) <= 9;
         }
 
         /// <summary>
         /// Is 0 ~ 9, '.', '+', '-'?
         /// </summary>
 #if NETSTANDARD
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
         public static bool IsNumberRepresentation(byte c)
@@ -51,6 +52,7 @@ namespace Spreads.Serialization.Utf8Json.Internal
                 case 56:
                 case 57: // 9
                     return true;
+
                 case 44:
                 case 47:
                 default:
@@ -59,36 +61,43 @@ namespace Spreads.Serialization.Utf8Json.Internal
         }
 
 #if NETSTANDARD
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
         public static sbyte ReadSByte(DirectBuffer bytes, int offset, out int readCount)
         {
             return checked((sbyte)ReadInt64(bytes, offset, out readCount));
         }
+
 #if NETSTANDARD
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
         public static short ReadInt16(DirectBuffer bytes, int offset, out int readCount)
         {
             return checked((short)ReadInt64(bytes, offset, out readCount));
         }
+
 #if NETSTANDARD
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
         public static int ReadInt32(DirectBuffer bytes, int offset, out int readCount)
         {
             return checked((int)ReadInt64(bytes, offset, out readCount));
         }
+
 #if NETSTANDARD
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-        public static long ReadInt64(DirectBuffer bytes, int offset, out int readCount)
+        public static unsafe long ReadInt64(DirectBuffer bytes, int offset, out int readCount)
         {
             var value = 0L;
             var sign = 1;
             var offset1 = offset;
 
-            if (bytes[offset] == '-')
+            if (bytes.Data[offset] == '-')
             {
                 sign = -1;
                 offset1 += 1;
@@ -97,8 +106,8 @@ namespace Spreads.Serialization.Utf8Json.Internal
             var len = bytes.Length;
             for (int i = offset1; i < len; i++)
             {
-                var b = (long)(bytes[i] - '0');
-                if (unchecked ((ulong)b) > 9)
+                var b = (bytes.Data[i] - '0');
+                if (unchecked((uint)b) > 9)
                 {
                     readCount = i - offset;
                     goto END;
@@ -109,24 +118,30 @@ namespace Spreads.Serialization.Utf8Json.Internal
             }
             readCount = len - offset;
 
-            END:
+        END:
             return unchecked(value * sign);
         }
+
 #if NETSTANDARD
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
         public static byte ReadByte(DirectBuffer bytes, int offset, out int readCount)
         {
             return checked((byte)ReadUInt64(bytes, offset, out readCount));
         }
+
 #if NETSTANDARD
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
         public static ushort ReadUInt16(DirectBuffer bytes, int offset, out int readCount)
         {
             return checked((ushort)ReadUInt64(bytes, offset, out readCount));
         }
+
 #if NETSTANDARD
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
         public static uint ReadUInt32(DirectBuffer bytes, int offset, out int readCount)
@@ -134,18 +149,17 @@ namespace Spreads.Serialization.Utf8Json.Internal
             return checked((uint)ReadUInt64(bytes, offset, out readCount));
         }
 
-
-
 #if NETSTANDARD
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-        public static ulong ReadUInt64(DirectBuffer bytes, int offset, out int readCount)
+        public static unsafe ulong ReadUInt64(DirectBuffer bytes, int offset, out int readCount)
         {
             var value = 0UL;
             var len = bytes.Length;
             for (int i = offset; i < len; i++)
             {
-                var b = unchecked ((ulong)(bytes[i] - '0'));
+                var b = unchecked((uint)(bytes.Data[i] - '0'));
                 if (b > 9)
                 {
                     readCount = i - offset;
@@ -156,54 +170,73 @@ namespace Spreads.Serialization.Utf8Json.Internal
             }
             readCount = len - offset;
 
-            END:
+        END:
             return value;
         }
 
 #if NETSTANDARD
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
         public static float ReadSingle(DirectBuffer bytes, int offset, out int readCount)
         {
             return StringToDoubleConverter.ToSingle(bytes, offset, out readCount);
         }
+
 #if NETSTANDARD
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+
+        [MethodImpl(MethodImplOptions.NoInlining
+#if NETCOREAPP3_0
+                    | MethodImplOptions.AggressiveOptimization
+#endif
+        )]
 #endif
         public static double ReadDouble(DirectBuffer bytes, int offset, out int readCount)
         {
             return StringToDoubleConverter.ToDouble(bytes, offset, out readCount);
         }
+
 #if NETSTANDARD
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
         public static int WriteByte(ref byte[] buffer, int offset, byte value)
         {
             return WriteUInt64(ref buffer, offset, (ulong)value);
         }
+
 #if NETSTANDARD
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
         public static int WriteUInt16(ref byte[] buffer, int offset, ushort value)
         {
             return WriteUInt64(ref buffer, offset, (ulong)value);
         }
+
 #if NETSTANDARD
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
         public static int WriteUInt32(ref byte[] buffer, int offset, uint value)
         {
             return WriteUInt64(ref buffer, offset, (ulong)value);
         }
+
 #if NETSTANDARD
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+
+        [MethodImpl(MethodImplOptions.NoInlining
+#if NETCOREAPP3_0
+            | MethodImplOptions.AggressiveOptimization
+#endif
+        )]
 #endif
         public static unsafe int WriteUInt64(ref byte[] buffer, int offset, ulong value)
         {
             var startOffset = offset;
 
             ulong num1 = value, num2, num3, num4, num5, div;
-            
+
             if (num1 < 10000)
             {
                 if (num1 < 10) { BinaryUtil.EnsureCapacity(ref buffer, offset, 1); goto L1; }
@@ -255,91 +288,103 @@ namespace Spreads.Serialization.Utf8Json.Internal
                                 if (num5 < 1000) { BinaryUtil.EnsureCapacity(ref buffer, offset, 19); goto L19; }
                                 BinaryUtil.EnsureCapacity(ref buffer, offset, 20); goto L20;
                             }
-                            L20:
+                        L20:
                             buffer[offset++] = (byte)('0' + (div = (num5 * 8389UL) >> 23));
                             num5 -= div * 1000;
-                            L19:
+                        L19:
                             buffer[offset++] = (byte)('0' + (div = (num5 * 5243UL) >> 19));
                             num5 -= div * 100;
-                            L18:
+                        L18:
                             buffer[offset++] = (byte)('0' + (div = (num5 * 6554UL) >> 16));
                             num5 -= div * 10;
-                            L17:
+                        L17:
                             buffer[offset++] = (byte)('0' + (num5));
                         }
-                        L16:
+                    L16:
                         buffer[offset++] = (byte)('0' + (div = (num4 * 8389UL) >> 23));
                         num4 -= div * 1000;
-                        L15:
+                    L15:
                         buffer[offset++] = (byte)('0' + (div = (num4 * 5243UL) >> 19));
                         num4 -= div * 100;
-                        L14:
+                    L14:
                         buffer[offset++] = (byte)('0' + (div = (num4 * 6554UL) >> 16));
                         num4 -= div * 10;
-                        L13:
+                    L13:
                         buffer[offset++] = (byte)('0' + (num4));
                     }
-                    L12:
+                L12:
                     buffer[offset++] = (byte)('0' + (div = (num3 * 8389UL) >> 23));
                     num3 -= div * 1000;
-                    L11:
+                L11:
                     buffer[offset++] = (byte)('0' + (div = (num3 * 5243UL) >> 19));
                     num3 -= div * 100;
-                    L10:
+                L10:
                     buffer[offset++] = (byte)('0' + (div = (num3 * 6554UL) >> 16));
                     num3 -= div * 10;
-                    L9:
+                L9:
                     buffer[offset++] = (byte)('0' + (num3));
                 }
-                L8:
+            L8:
                 buffer[offset++] = (byte)('0' + (div = (num2 * 8389UL) >> 23));
                 num2 -= div * 1000;
-                L7:
+            L7:
                 buffer[offset++] = (byte)('0' + (div = (num2 * 5243UL) >> 19));
                 num2 -= div * 100;
-                L6:
+            L6:
                 buffer[offset++] = (byte)('0' + (div = (num2 * 6554UL) >> 16));
                 num2 -= div * 10;
-                L5:
+            L5:
                 buffer[offset++] = (byte)('0' + (num2));
             }
-            L4:
+        L4:
             buffer[offset++] = (byte)('0' + (div = (num1 * 8389UL) >> 23));
             num1 -= div * 1000;
-            L3:
+        L3:
             buffer[offset++] = (byte)('0' + (div = (num1 * 5243UL) >> 19));
             num1 -= div * 100;
-            L2:
+        L2:
             buffer[offset++] = (byte)('0' + (div = (num1 * 6554UL) >> 16));
             num1 -= div * 10;
-            L1:
+        L1:
             buffer[offset++] = (byte)('0' + (num1));
 
             return offset - startOffset;
         }
+
 #if NETSTANDARD
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
         public static int WriteSByte(ref byte[] buffer, int offset, sbyte value)
         {
             return WriteInt64(ref buffer, offset, (long)value);
         }
+
 #if NETSTANDARD
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
         public static int WriteInt16(ref byte[] buffer, int offset, short value)
         {
             return WriteInt64(ref buffer, offset, (long)value);
         }
+
 #if NETSTANDARD
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
         public static int WriteInt32(ref byte[] buffer, int offset, int value)
         {
             return WriteInt64(ref buffer, offset, (long)value);
         }
+
 #if NETSTANDARD
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+
+        [MethodImpl(MethodImplOptions.NoInlining
+#if NETCOREAPP3_0
+                    | MethodImplOptions.AggressiveOptimization
+#endif
+        )]
 #endif
         public static unsafe int WriteInt64(ref byte[] buffer, int offset, long value)
         {
@@ -411,64 +456,64 @@ namespace Spreads.Serialization.Utf8Json.Internal
                                 if (num5 < 1000) { BinaryUtil.EnsureCapacity(ref buffer, offset, 19); goto L19; }
                                 BinaryUtil.EnsureCapacity(ref buffer, offset, 20); goto L20;
                             }
-                            L20:
+                        L20:
                             buffer[offset++] = (byte)('0' + (div = (num5 * 8389L) >> 23));
                             num5 -= div * 1000;
-                            L19:
+                        L19:
                             buffer[offset++] = (byte)('0' + (div = (num5 * 5243L) >> 19));
                             num5 -= div * 100;
-                            L18:
+                        L18:
                             buffer[offset++] = (byte)('0' + (div = (num5 * 6554L) >> 16));
                             num5 -= div * 10;
-                            L17:
+                        L17:
                             buffer[offset++] = (byte)('0' + (num5));
                         }
-                        L16:
+                    L16:
                         buffer[offset++] = (byte)('0' + (div = (num4 * 8389L) >> 23));
                         num4 -= div * 1000;
-                        L15:
+                    L15:
                         buffer[offset++] = (byte)('0' + (div = (num4 * 5243L) >> 19));
                         num4 -= div * 100;
-                        L14:
+                    L14:
                         buffer[offset++] = (byte)('0' + (div = (num4 * 6554L) >> 16));
                         num4 -= div * 10;
-                        L13:
+                    L13:
                         buffer[offset++] = (byte)('0' + (num4));
                     }
-                    L12:
+                L12:
                     buffer[offset++] = (byte)('0' + (div = (num3 * 8389L) >> 23));
                     num3 -= div * 1000;
-                    L11:
+                L11:
                     buffer[offset++] = (byte)('0' + (div = (num3 * 5243L) >> 19));
                     num3 -= div * 100;
-                    L10:
+                L10:
                     buffer[offset++] = (byte)('0' + (div = (num3 * 6554L) >> 16));
                     num3 -= div * 10;
-                    L9:
+                L9:
                     buffer[offset++] = (byte)('0' + (num3));
                 }
-                L8:
+            L8:
                 buffer[offset++] = (byte)('0' + (div = (num2 * 8389L) >> 23));
                 num2 -= div * 1000;
-                L7:
+            L7:
                 buffer[offset++] = (byte)('0' + (div = (num2 * 5243L) >> 19));
                 num2 -= div * 100;
-                L6:
+            L6:
                 buffer[offset++] = (byte)('0' + (div = (num2 * 6554L) >> 16));
                 num2 -= div * 10;
-                L5:
+            L5:
                 buffer[offset++] = (byte)('0' + (num2));
             }
-            L4:
+        L4:
             buffer[offset++] = (byte)('0' + (div = (num1 * 8389L) >> 23));
             num1 -= div * 1000;
-            L3:
+        L3:
             buffer[offset++] = (byte)('0' + (div = (num1 * 5243L) >> 19));
             num1 -= div * 100;
-            L2:
+        L2:
             buffer[offset++] = (byte)('0' + (div = (num1 * 6554L) >> 16));
             num1 -= div * 10;
-            L1:
+        L1:
             buffer[offset++] = (byte)('0' + (num1));
 
             return offset - startOffset;
@@ -478,36 +523,40 @@ namespace Spreads.Serialization.Utf8Json.Internal
         private static int WriteLongMinValue(ref byte[] buffer, int offset, int startOffset)
         {
             BinaryUtil.EnsureCapacity(ref buffer, offset, 20);
-            buffer[offset++] = (byte) '-';
-            buffer[offset++] = (byte) '9';
-            buffer[offset++] = (byte) '2';
-            buffer[offset++] = (byte) '2';
-            buffer[offset++] = (byte) '3';
-            buffer[offset++] = (byte) '3';
-            buffer[offset++] = (byte) '7';
-            buffer[offset++] = (byte) '2';
-            buffer[offset++] = (byte) '0';
-            buffer[offset++] = (byte) '3';
-            buffer[offset++] = (byte) '6';
-            buffer[offset++] = (byte) '8';
-            buffer[offset++] = (byte) '5';
-            buffer[offset++] = (byte) '4';
-            buffer[offset++] = (byte) '7';
-            buffer[offset++] = (byte) '7';
-            buffer[offset++] = (byte) '5';
-            buffer[offset++] = (byte) '8';
-            buffer[offset++] = (byte) '0';
-            buffer[offset++] = (byte) '8';
+            buffer[offset++] = (byte)'-';
+            buffer[offset++] = (byte)'9';
+            buffer[offset++] = (byte)'2';
+            buffer[offset++] = (byte)'2';
+            buffer[offset++] = (byte)'3';
+            buffer[offset++] = (byte)'3';
+            buffer[offset++] = (byte)'7';
+            buffer[offset++] = (byte)'2';
+            buffer[offset++] = (byte)'0';
+            buffer[offset++] = (byte)'3';
+            buffer[offset++] = (byte)'6';
+            buffer[offset++] = (byte)'8';
+            buffer[offset++] = (byte)'5';
+            buffer[offset++] = (byte)'4';
+            buffer[offset++] = (byte)'7';
+            buffer[offset++] = (byte)'7';
+            buffer[offset++] = (byte)'5';
+            buffer[offset++] = (byte)'8';
+            buffer[offset++] = (byte)'0';
+            buffer[offset++] = (byte)'8';
             return offset - startOffset;
         }
+
 #if NETSTANDARD
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
         public static int WriteSingle(ref byte[] bytes, int offset, float value)
         {
             return DoubleToStringConverter.GetBytes(ref bytes, offset, value);
         }
+
 #if NETSTANDARD
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
         public static int WriteDouble(ref byte[] bytes, int offset, double value)
@@ -518,6 +567,7 @@ namespace Spreads.Serialization.Utf8Json.Internal
         // boolean is not number:)
 
 #if NETSTANDARD
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
         public static bool ReadBoolean(DirectBuffer bytes, int offset, out int readCount)
@@ -544,9 +594,9 @@ namespace Spreads.Serialization.Utf8Json.Internal
                 throw new InvalidOperationException("value is not boolean.");
             }
 
-            ERROR_TRUE:
+        ERROR_TRUE:
             throw new InvalidOperationException("value is not boolean(true).");
-            ERROR_FALSE:
+        ERROR_FALSE:
             throw new InvalidOperationException("value is not boolean(false).");
         }
     }

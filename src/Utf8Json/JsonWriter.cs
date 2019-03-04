@@ -107,12 +107,14 @@ namespace Spreads.Serialization.Utf8Json
             return result;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public JsonWriter(byte[] initialBuffer)
         {
             buffer = initialBuffer;
             offset = 0;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public JsonWriter(byte[] initialBuffer, int offset)
         {
             buffer = initialBuffer;
@@ -345,8 +347,11 @@ namespace Spreads.Serialization.Utf8Json
         }
 
 #if NETSTANDARD
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [MethodImpl(MethodImplOptions.NoInlining
+#if NETCOREAPP3_0
+                    | MethodImplOptions.AggressiveOptimization
+#endif
+        )]
 #endif
         public void WriteSingle(Single value)
         {
@@ -354,8 +359,11 @@ namespace Spreads.Serialization.Utf8Json
         }
 
 #if NETSTANDARD
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [MethodImpl(MethodImplOptions.NoInlining
+#if NETCOREAPP3_0
+                    | MethodImplOptions.AggressiveOptimization
+#endif
+        )]
 #endif
         public void WriteDouble(double value)
         {
@@ -389,8 +397,17 @@ namespace Spreads.Serialization.Utf8Json
             WriteUInt64(value);
         }
 
+#if NETSTANDARD
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
         public void WriteUInt64(ulong value)
         {
+            //var destination = buffer.AsSpan().Slice(offset);
+            //System.Buffers.Text.Utf8Formatter.TryFormat(value, destination, out var written);
+
+            //offset += written;
+
             offset += NumberConverter.WriteUInt64(ref buffer, offset, value);
         }
 
