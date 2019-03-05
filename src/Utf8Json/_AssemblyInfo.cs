@@ -2,7 +2,7 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-[assembly: AssemblyTitle("Utf8Json")]
+[assembly: AssemblyTitle("Spreads.Utf8Json")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
@@ -11,6 +11,6 @@ using System.Runtime.InteropServices;
 
 [assembly: ComVisible(false)]
 
-[assembly: Guid("929e3779-4c3a-42a3-bc72-3d77511e988f")]
-[assembly: AssemblyVersion("1.3.7")]
-[assembly: AssemblyFileVersion("1.3.7")]
+[assembly: Guid("939e3779-4c3a-42a3-bc72-3d77511e988f")]
+[assembly: AssemblyVersion("1.0.0")]
+[assembly: AssemblyFileVersion("1.0.0")]

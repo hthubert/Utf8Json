@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Spreads.Buffers;
 using Xunit;
 
 namespace Spreads.Serialization.Utf8Json.Tests
@@ -47,11 +48,13 @@ namespace Spreads.Serialization.Utf8Json.Tests
 
 
         [Fact]
-        public void Null()
+        public unsafe void Null()
         {
             SimpleIntKeyData n = null;
             var bytes = JsonSerializer.Serialize(n);
-            new JsonReader(bytes).ReadIsNull().IsTrue();
+            var h = (bytes).AsMemory().Pin();
+            var db = new DirectBuffer((long)bytes.Length, (byte*)h.Pointer);
+            new JsonReader(db).ReadIsNull().IsTrue();
             JsonSerializer.Deserialize<SimpleIntKeyData>(bytes).IsNull();
 
             // deserialize from nil

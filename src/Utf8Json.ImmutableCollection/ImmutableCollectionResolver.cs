@@ -1,8 +1,9 @@
-﻿using Utf8Json.Formatters;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Reflection;
+using Spreads.Serialization.Utf8Json;
+using Spreads.Serialization.Utf8Json.Formatters;
 
 namespace Utf8Json.ImmutableCollection
 {

@@ -415,6 +415,48 @@ namespace Spreads.Serialization.Utf8Json
             }
         }
 
+
+        public static System.Threading.Tasks.Task<T> DeserializeAsync<T>(Stream stream)
+        {
+            return DeserializeAsync<T>(stream, defaultResolver);
+        }
+
+        public static async System.Threading.Tasks.Task<T> DeserializeAsync<T>(Stream stream, IJsonFormatterResolver resolver)
+        {
+            throw new NotImplementedException("Async is fake in Utf8Json, it is done over sync methods w.r.t. serialization and requires a full buffer.");
+
+            //if (resolver == null) resolver = DefaultResolver;
+
+            //var buffer = BufferPool.Default.Rent();
+            //var buf = buffer;
+            //try
+            //{
+            //    int length = 0;
+            //    int read;
+            //    while ((read = await stream.ReadAsync(buf, length, buf.Length - length).ConfigureAwait(false)) > 0)
+            //    {
+            //        length += read;
+            //        if (length == buf.Length)
+            //        {
+            //            BinaryUtil.FastResize(ref buf, length * 2);
+            //        }
+            //    }
+
+            //    // when token is number, can not use from pool(can not find end line).
+            //    var token = new JsonReader(buf).GetCurrentJsonToken();
+            //    if (token == JsonToken.Number)
+            //    {
+            //        buf = BinaryUtil.FastCloneWithResize(buf, length);
+            //    }
+
+            //    return Deserialize<T>(buf, resolver);
+            //}
+            //finally
+            //{
+            //    BufferPool.Default.Return(buffer);
+            //}
+        }
+
         //[MethodImpl(MethodImplOptions.AggressiveInlining)]
         //public static string PrettyPrint(byte[] json)
         //{

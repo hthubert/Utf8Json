@@ -9,7 +9,7 @@ namespace Spreads.Serialization.Utf8Json.Tests
     {
         static JsonReader CreateReader(string json)
         {
-            return new JsonReader(Encoding.UTF8.GetBytes(json));
+            return JsonReader.FromArray(Encoding.UTF8.GetBytes(json));
         }
 
         [Fact]

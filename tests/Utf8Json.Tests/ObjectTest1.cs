@@ -267,7 +267,7 @@ namespace Spreads.Serialization.Utf8Json.Tests
         {
             {
                 var a = @"[  [[[[1,2,3]],9999]], 10]";
-                var reader = new JsonReader(Encoding.UTF8.GetBytes(a));
+                var reader = JsonReader.FromArray(Encoding.UTF8.GetBytes(a));
                 reader.ReadIsBeginArray();
                 reader.ReadNextBlock();
                 reader.ReadIsValueSeparatorWithVerify();

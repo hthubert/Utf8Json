@@ -61,9 +61,9 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Utf8Json\Utf8Json.csproj">
+    <ProjectReference Include="..\..\src\Utf8Json\Spreads.Utf8Json.csproj">
       <Project>{ae4b8434-240d-4aae-a35d-7bb664271ebc}</Project>
-      <Name>Utf8Json</Name>
+      <Name>Spreads.Utf8Json</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

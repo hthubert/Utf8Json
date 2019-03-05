@@ -28,7 +28,7 @@ namespace PerfBenchmark
 
     [MessagePackObject]
     [ProtoBuf.ProtoContract]
-    public class TargetClass
+    public struct TargetClass
     {
         [Key(0)]
         [ProtoBuf.ProtoMember(1)]

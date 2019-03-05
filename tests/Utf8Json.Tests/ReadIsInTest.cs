@@ -11,7 +11,7 @@ namespace Spreads.Serialization.Utf8Json.Tests
         {
             var list = new List<int>();
             var json = JsonSerializer.Serialize(xs);
-            var reader = new JsonReader(json);
+            var reader = JsonReader.FromArray(json);
             var c = 0;
             while (reader.ReadIsInArray(ref c))
             {
@@ -24,7 +24,7 @@ namespace Spreads.Serialization.Utf8Json.Tests
         {
             var list = new Dictionary<string, int>();
             var json = JsonSerializer.Serialize(xs);
-            var reader = new JsonReader(json);
+            var reader = JsonReader.FromArray(json);
             var c = 0;
             while (reader.ReadIsInObject(ref c))
             {

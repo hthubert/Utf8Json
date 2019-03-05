@@ -12,7 +12,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Utf8Json\Utf8Json.csproj" />
+      <ProjectReference Include="..\Utf8Json\Spreads.Utf8Json.csproj" />
     </ItemGroup>
 
 </Project>

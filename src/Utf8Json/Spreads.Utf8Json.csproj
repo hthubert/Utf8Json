@@ -1,0 +1,163 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFrameworks>netstandard2.0;net461;netcoreapp3.0</TargetFrameworks>
+        <Configurations>Debug;Release;</Configurations>
+        <SignAssembly>true</SignAssembly>
+        <AssemblyOriginatorKeyFile>../../../../tools/SpreadsKey.snk</AssemblyOriginatorKeyFile>
+        <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+        <AssemblyName>Spreads.Utf8Json</AssemblyName>
+        <RootNamespace>Spreads.Serialization.Utf8Json</RootNamespace>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU' AND '$(TargetFramework)'=='NET45'">
+        <LangVersion>5</LangVersion>
+        <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
+        <DefineConstants>TRACE;DEBUG;NETSTANDARD;NETSTANDARD2_0;NETSTANDARD2_0;NET45</DefineConstants>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU' AND '$(TargetFramework)'!='NET45'">
+        <LangVersion>7.2</LangVersion>
+        <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
+        <DefineConstants>TRACE;DEBUG;NETSTANDARD;NETSTANDARD2_0;NETSTANDARD2_0;</DefineConstants>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU' AND '$(TargetFramework)'=='NET45'">
+        <LangVersion>5</LangVersion>
+        <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
+        <DefineConstants>RELEASE;NETSTANDARD;NETSTANDARD2_0;NET45</DefineConstants>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU' AND '$(TargetFramework)'!='NET45'">
+        <LangVersion>7.2</LangVersion>
+        <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
+        <DefineConstants>RELEASE;NETSTANDARD;NETSTANDARD2_0</DefineConstants>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|NET45|AnyCPU'">
+        <DocumentationFile>bin\Release\NET45\Utf8Json.xml</DocumentationFile>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|NET47|AnyCPU'">
+        <DocumentationFile>bin\Release\NET47\Utf8Json.xml</DocumentationFile>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netstandard2.0|AnyCPU'">
+      <DocumentationFile>bin\Release\netstandard2.0\Utf8Json.xml</DocumentationFile>
+      <NoWarn>1701;1702;1705;1591</NoWarn>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netstandard2.0|AnyCPU'">
+      <NoWarn>1701;1702;1705;1591</NoWarn>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <None Remove="*.meta" />
+        <None Remove="Resolvers\*.meta" />
+        <None Remove="Internal\*.meta" />
+        <None Remove="Formatters\*.meta" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Compile Remove="Internal\UnsafeMemory.cs" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Remove="Internal\UnsafeMemory.tt" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Compile Include="..\..\..\..\src\Spreads.Core\Buffers\ArrayMemory.cs" Link="Spreads\Buffers\ArrayMemory.cs" />
+      <Compile Include="..\..\..\..\src\Spreads.Core\Buffers\BufferPool.cs" Link="Spreads\Buffers\BufferPool.cs" />
+      <Compile Include="..\..\..\..\src\Spreads.Core\Buffers\BuffersThrowHelper.cs" Link="Spreads\Buffers\BuffersThrowHelper.cs" />
+      <Compile Include="..\..\..\..\src\Spreads.Core\Buffers\DirectBuffer.cs" Link="Spreads\Buffers\DirectBuffer.cs" />
+      <Compile Include="..\..\..\..\src\Spreads.Core\Buffers\IPinnedSpan.cs" Link="Spreads\Buffers\IPinnedSpan.cs" />
+      <Compile Include="..\..\..\..\src\Spreads.Core\Buffers\OffHeapBuffer.cs" Link="Spreads\Buffers\OffHeapBuffer.cs" />
+      <Compile Include="..\..\..\..\src\Spreads.Core\Buffers\OffHeapMemory.cs" Link="Spreads\Buffers\OffHeapMemory.cs" />
+      <Compile Include="..\..\..\..\src\Spreads.Core\Buffers\OffHeapMemoryPool.cs" Link="Spreads\Buffers\OffHeapMemoryPool.cs" />
+      <Compile Include="..\..\..\..\src\Spreads.Core\Buffers\RecyclableMemoryStream.cs" Link="Spreads\Buffers\RecyclableMemoryStream.cs" />
+      <Compile Include="..\..\..\..\src\Spreads.Core\Buffers\RecyclableMemoryStreamManager.cs" Link="Spreads\Buffers\RecyclableMemoryStreamManager.cs" />
+      <Compile Include="..\..\..\..\src\Spreads.Core\Buffers\RecyclableMemoryStreamManager.Events.cs" Link="Spreads\Buffers\RecyclableMemoryStreamManager.Events.cs" />
+      <Compile Include="..\..\..\..\src\Spreads.Core\Buffers\RetainableMemory.cs" Link="Spreads\Buffers\RetainableMemory.cs" />
+      <Compile Include="..\..\..\..\src\Spreads.Core\Buffers\RetainableMemoryPool.cs" Link="Spreads\Buffers\RetainableMemoryPool.cs" />
+      <Compile Include="..\..\..\..\src\Spreads.Core\Buffers\RetainedMemory.cs" Link="Spreads\Buffers\RetainedMemory.cs" />
+      <Compile Include="..\..\..\..\src\Spreads.Core\Collections\Concurrent\LockedObjectPool.cs" Link="Spreads\Collections\LockedObjectPool.cs" />
+      <Compile Include="..\..\..\..\src\Spreads.Core\Collections\Concurrent\ObjectPool.cs" Link="Spreads\Collections\ObjectPool.cs" />
+      <Compile Include="..\..\..\..\src\Spreads.Core\DataTypes\Timestamp.cs" Link="Spreads\DataTypes\Timestamp.cs" />
+      <Compile Include="..\..\..\..\src\Spreads.Core\DataTypes\TypeEnum.cs" Link="Spreads\Serialization\TypeEnum.cs" />
+      <Compile Include="..\..\..\..\src\Spreads.Core\Serialization\BinarySerializationAttribute.cs" Link="Spreads\Serialization\BinarySerializationAttribute.cs" />
+      <Compile Include="..\..\..\..\src\Spreads.Core\Serialization\CompressionMethod.cs" Link="Spreads\Serialization\CompressionMethod.cs" />
+      <Compile Include="..\..\..\..\src\Spreads.Core\Serialization\DataTypeHeader.cs" Link="Spreads\Serialization\DataTypeHeader.cs" />
+      <Compile Include="..\..\..\..\src\Spreads.Core\Serialization\FourBytes.cs" Link="Spreads\Serialization\FourBytes.cs" />
+      <Compile Include="..\..\..\..\src\Spreads.Core\Serialization\IBinarySerializer.cs" Link="Spreads\Serialization\IBinarySerializer.cs" />
+      <Compile Include="..\..\..\..\src\Spreads.Core\Serialization\SerializationFormat.cs" Link="Spreads\Utils\SerializationFormat.cs" />
+      <Compile Include="..\..\..\..\src\Spreads.Core\Serialization\TypeHelper.cs" Link="Spreads\Serialization\TypeHelper.cs" />
+      <Compile Include="..\..\..\..\src\Spreads.Core\Serialization\VersionAndFlags.cs" Link="Spreads\Serialization\VersionAndFlags.cs" />
+      <Compile Include="..\..\..\..\src\Spreads.Core\Threading\AtomicCounter.cs" Link="Spreads\Threading\AtomicCounter.cs" />
+      <Compile Include="..\..\..\..\src\Spreads.Core\Utils\BitUtil.cs" Link="Spreads\Utils\BitUtil.cs" />
+      <Compile Include="..\..\..\..\src\Spreads.Core\Utils\IntUtil.cs" Link="Spreads\Utils\IntUtil.cs" />
+      <Compile Include="..\..\..\..\src\Spreads.Core\Utils\ThrowHelper.cs" Link="Spreads\Utils\ThrowHelper.cs" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Spreads.Native" Version="1.0.0-build1901241718R" />
+        <PackageReference Include="System.Memory" Version="4.5.2" />
+        <PackageReference Include="System.Reflection.Emit" Version="4.3.0" />
+        <PackageReference Include="System.Reflection.Emit.Lightweight" Version="4.3.0" />
+        <PackageReference Include="System.Runtime.Numerics" Version="4.3.0" />
+        <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.2" />
+        <PackageReference Include="System.ValueTuple" Version="4.5.0" />
+        <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.5.2" />
+    </ItemGroup>
+
+    <ItemGroup Condition=" '$(TargetFramework)' == 'net45' ">
+        <PackageReference Include="System.ValueTuple" Version="4.4.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Update="Formatters\PrimitiveFormatter.tt">
+            <Generator>TextTemplatingFileGenerator</Generator>
+            <LastGenOutput>PrimitiveFormatter.cs</LastGenOutput>
+        </None>
+        <None Update="Formatters\ValueTupleFormatter.tt">
+            <LastGenOutput>ValueTupleFormatter.cs</LastGenOutput>
+            <Generator>TextTemplatingFileGenerator</Generator>
+        </None>
+        <None Update="Formatters\TupleFormatter.tt">
+            <Generator>TextTemplatingFileGenerator</Generator>
+            <LastGenOutput>TupleFormatter.cs</LastGenOutput>
+        </None>
+    </ItemGroup>
+
+    <ItemGroup>
+        <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Compile Update="Formatters\PrimitiveFormatter.cs">
+            <DesignTime>True</DesignTime>
+            <AutoGen>True</AutoGen>
+            <DependentUpon>PrimitiveFormatter.tt</DependentUpon>
+        </Compile>
+        <Compile Update="Formatters\TupleFormatter.cs">
+            <DesignTime>True</DesignTime>
+            <AutoGen>True</AutoGen>
+            <DependentUpon>TupleFormatter.tt</DependentUpon>
+        </Compile>
+        <Compile Update="Formatters\ValueTupleFormatter.cs">
+            <DesignTime>True</DesignTime>
+            <AutoGen>True</AutoGen>
+            <DependentUpon>ValueTupleFormatter.tt</DependentUpon>
+        </Compile>
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Spreads\Buffers\" />
+      <Folder Include="Spreads\Collections\" />
+      <Folder Include="Spreads\DataTypes\" />
+      <Folder Include="Spreads\Serialization\" />
+      <Folder Include="Spreads\Threading\" />
+      <Folder Include="Spreads\Utils\" />
+    </ItemGroup>
+
+</Project>

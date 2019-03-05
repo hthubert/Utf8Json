@@ -53,12 +53,12 @@ namespace Spreads.Serialization.Utf8Json.Tests
 
             var ms = new JsonWriter(Array.Empty<byte>());
             JsonSerializer.NonGeneric.Serialize(t, ref ms, data);
-            var ms2 = new JsonReader(ms.ToUtf8ByteArray());
+            var ms2 = JsonReader.FromArray(ms.ToUtf8ByteArray());
             var data3 = JsonSerializer.NonGeneric.Deserialize(t, ref ms2) as FirstSimpleData;
 
             ms = new JsonWriter(Array.Empty<byte>());
             JsonSerializer.NonGeneric.Serialize(t, ref ms, data, StandardResolver.Default);
-            ms2 = new JsonReader(ms.ToUtf8ByteArray());
+            ms2 = JsonReader.FromArray(ms.ToUtf8ByteArray());
             var data4 = JsonSerializer.NonGeneric.Deserialize(t, ref ms2, StandardResolver.Default) as FirstSimpleData;
 
             new[] { data1.Prop1, data2.Prop1, data3.Prop1, data4.Prop1 }.Distinct().Is(data.Prop1);

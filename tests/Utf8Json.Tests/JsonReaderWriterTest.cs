@@ -13,7 +13,7 @@ namespace Spreads.Serialization.Utf8Json.Tests
             var reference = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(target));
             result.ToArray().Is(reference);
 
-            return new JsonReader(result.Array, result.Offset);
+            return JsonReader.FromArray(result.Array, result.Offset);
         }
         /*
         [Fact]
@@ -199,7 +199,7 @@ namespace Spreads.Serialization.Utf8Json.Tests
             var str = "\\u0313" + origstr;
             str = "\"" + str + "\"";
 
-            var reader = new JsonReader(Encoding.UTF8.GetBytes(str), 0);
+            var reader = JsonReader.FromArray(Encoding.UTF8.GetBytes(str), 0);
             var aaa = reader.ReadString();
 
             aaa.Is("\u0313" + origstr);
@@ -212,7 +212,7 @@ namespace Spreads.Serialization.Utf8Json.Tests
             var origstr = new string('a', 99999);
             var str = "\"" + origstr + "\"";
 
-            var reader = new JsonReader(Encoding.UTF8.GetBytes(str), 0);
+            var reader = JsonReader.FromArray(Encoding.UTF8.GetBytes(str), 0);
             var aaa = reader.ReadString();
 
             aaa.Is(origstr);
@@ -224,7 +224,7 @@ namespace Spreads.Serialization.Utf8Json.Tests
             var origstr = new string('a', 999999);
             var str = "\"" + origstr + "\"";
 
-            var reader = new JsonReader(Encoding.UTF8.GetBytes(str), 0);
+            var reader = JsonReader.FromArray(Encoding.UTF8.GetBytes(str), 0);
             var aaa = reader.ReadString();
 
             aaa.Is(origstr);
@@ -246,7 +246,7 @@ namespace Spreads.Serialization.Utf8Json.Tests
             var array = Enumerable.Range(1, 100000).ToArray();
             var bin = JsonSerializer.Serialize(array);
 
-            var reader = new JsonReader(bin);
+            var reader = JsonReader.FromArray(bin);
             reader.ReadNextBlock();
 
             // ok, can read.
@@ -259,7 +259,7 @@ namespace Spreads.Serialization.Utf8Json.Tests
             var array = Enumerable.Range(1, 100000).Select(x => new int[0]).ToArray();
             var bin = JsonSerializer.Serialize(array);
 
-            var reader = new JsonReader(bin);
+            var reader = JsonReader.FromArray(bin);
             reader.ReadNextBlock();
 
             // ok, can read.

@@ -36,6 +36,17 @@ namespace Spreads.Serialization.Utf8Json
         private readonly int _length;
         private int offset;
 
+
+#if !SPREADS
+        [Obsolete("For tests only. It pins the array and never releases it.")]
+        public static JsonReader FromArray(byte[] bytes, int offset = 0)
+        {
+            var h = (bytes).AsMemory().Pin();
+            var db = new DirectBuffer(bytes.Length, (byte*)h.Pointer);
+            return new JsonReader(db.Slice(offset));
+        }
+#endif
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public JsonReader(DirectBuffer bytes)
         {

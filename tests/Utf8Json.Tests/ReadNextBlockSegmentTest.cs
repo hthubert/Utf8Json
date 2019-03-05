@@ -1,4 +1,5 @@
 ﻿using System;
+using Spreads.Buffers;
 using Spreads.Serialization.Utf8Json.Internal;
 using Xunit;
 
@@ -28,7 +29,7 @@ namespace Spreads.Serialization.Utf8Json.Tests
                     if (reader.ReadIsNull()) return null;
 
                     string type = null;
-                    ArraySegment<byte> valueSegment = default(ArraySegment<byte>);
+                    DirectBuffer valueSegment = default;
 
                     var count = 0;
                     while (reader.ReadIsInObject(ref count))
@@ -56,13 +57,13 @@ namespace Spreads.Serialization.Utf8Json.Tests
                     {
                         case "TypeA":
                             {
-                                var childReader = new JsonReader(valueSegment.Array, valueSegment.Offset);
+                                var childReader = new JsonReader(valueSegment);
                                 result.Value = formatterResolver.GetFormatterWithVerify<ValueTypeA>().Deserialize(ref childReader, formatterResolver);
                             }
                             break;
                         case "TypeB":
                             {
-                                var childReader = new JsonReader(valueSegment.Array, valueSegment.Offset);
+                                var childReader = new JsonReader(valueSegment);
                                 result.Value = formatterResolver.GetFormatterWithVerify<ValueTypeB>().Deserialize(ref childReader, formatterResolver);
                             }
                             break;

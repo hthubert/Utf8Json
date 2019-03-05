@@ -3,6 +3,7 @@ using MessagePack.Resolvers;
 using System;
 using System.IO;
 using System.Text;
+using Spreads.Buffers;
 using Utf8Json;
 
 namespace PerfBenchmark
@@ -14,16 +15,24 @@ namespace PerfBenchmark
         public static TargetClassContractless objContractless;
 
         static Utf8Json.IJsonFormatterResolver jsonresolver = Utf8Json.Resolvers.StandardResolver.Default;
+        static Spreads.Serialization.Utf8Json.IJsonFormatterResolver spreadsJsonresolver = Spreads.Serialization.Utf8Json.Resolvers.StandardResolver.Default;
         Encoding utf8 = Encoding.UTF8;
 
         static SerializeBenchmark()
         {
+            Spreads.Settings.DoAdditionalCorrectnessChecks = false;
             var rand = new Random(34151513);
             obj1 = TargetClass.Create(rand);
             objContractless = new TargetClassContractless(obj1);
         }
 
         [Benchmark(Baseline = true)]
+        public byte[] SpreadsJsonSerializer()
+        {
+            return Spreads.Serialization.Utf8Json.JsonSerializer.Serialize(obj1, spreadsJsonresolver);
+        }
+
+        [Benchmark]
         public byte[] Utf8JsonSerializer()
         {
             return Utf8Json.JsonSerializer.Serialize(obj1, jsonresolver);
@@ -66,11 +75,11 @@ namespace PerfBenchmark
             }
         }
 
-        [Benchmark]
-        public byte[] NetJson()
-        {
-            return utf8.GetBytes(NetJSON.NetJSON.Serialize(obj1));
-        }
+        //[Benchmark]
+        //public byte[] NetJson()
+        //{
+        //    return utf8.GetBytes(NetJSON.NetJSON.Serialize(obj1));
+        //}
 
         [Benchmark]
         public byte[] JsonNet()
@@ -80,17 +89,22 @@ namespace PerfBenchmark
     }
 
     [Config(typeof(BenchmarkConfig))]
-    public class DeserializeBenchmark
+    public unsafe class DeserializeBenchmark
     {
+        static DirectBuffer jsonDb;
         static byte[] json = new SerializeBenchmark().Utf8JsonSerializer();
         static byte[] proto;
         static byte[] msgpack1 = new SerializeBenchmark().MessagePackCSharp();
         static byte[] msgpack2 = new SerializeBenchmark().MessagePackCSharpContractless();
         static Utf8Json.IJsonFormatterResolver jsonresolver = Utf8Json.Resolvers.StandardResolver.Default;
+        static Spreads.Serialization.Utf8Json.IJsonFormatterResolver spreadsJsonresolver = Spreads.Serialization.Utf8Json.Resolvers.StandardResolver.Default;
         static Encoding utf8 = Encoding.UTF8;
 
         static DeserializeBenchmark()
         {
+            Spreads.Settings.DoAdditionalCorrectnessChecks = false;
+            var mem = ((Memory<byte>)json).Pin();
+            jsonDb = new DirectBuffer(json.Length, (byte*)mem.Pointer);
             using (var ms = new MemoryStream())
             {
                 ProtoBuf.Serializer.Serialize(ms, SerializeBenchmark.obj1);
@@ -99,6 +113,12 @@ namespace PerfBenchmark
         }
 
         [Benchmark(Baseline = true)]
+        public TargetClass SpreadsJsonSerializer()
+        {
+            return Spreads.Serialization.Utf8Json.JsonSerializer.Deserialize<TargetClass>(jsonDb, spreadsJsonresolver);
+        }
+
+        [Benchmark]
         public TargetClass Utf8JsonSerializer()
         {
             return Utf8Json.JsonSerializer.Deserialize<TargetClass>(json, jsonresolver);
@@ -147,10 +167,10 @@ namespace PerfBenchmark
             return Newtonsoft.Json.JsonConvert.DeserializeObject<TargetClass>(utf8.GetString(json));
         }
 
-        [Benchmark]
-        public TargetClass NetJson()
-        {
-            return NetJSON.NetJSON.Deserialize<TargetClass>(utf8.GetString(json));
-        }
+        //[Benchmark]
+        //public TargetClass NetJson()
+        //{
+        //    return NetJSON.NetJSON.Deserialize<TargetClass>(utf8.GetString(json));
+        //}
     }
 }

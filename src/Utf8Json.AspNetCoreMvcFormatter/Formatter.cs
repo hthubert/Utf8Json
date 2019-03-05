@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc.Formatters;
 using System.Threading.Tasks;
+using Spreads.Serialization.Utf8Json;
 
 namespace Utf8Json.AspNetCoreMvcFormatter
 {

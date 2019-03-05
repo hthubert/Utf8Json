@@ -108,11 +108,11 @@ namespace Spreads.Serialization.Utf8Json.Tests
             var s4 = Encoding.UTF8.GetBytes("\"\\u3042\\u3044\\u3046えお\"");
             var s5 = Encoding.UTF8.GetBytes("\"\\uD840\\uDC0B\"");
 
-            var str1 = new JsonReader(s1, 0).ReadString();
-            var str2 = new JsonReader(s2, 0).ReadString();
-            var str3 = new JsonReader(s3, 0).ReadString();
-            var str4 = new JsonReader(s4, 0).ReadString();
-            var str5 = new JsonReader(s5, 0).ReadString();
+            var str1 = JsonReader.FromArray(s1, 0).ReadString();
+            var str2 = JsonReader.FromArray(s2, 0).ReadString();
+            var str3 = JsonReader.FromArray(s3, 0).ReadString();
+            var str4 = JsonReader.FromArray(s4, 0).ReadString();
+            var str5 = JsonReader.FromArray(s5, 0).ReadString();
 
             var st1 = JsonConvert.DeserializeObject<string>(Encoding.UTF8.GetString(s1));
             var st2 = JsonConvert.DeserializeObject<string>(Encoding.UTF8.GetString(s2));

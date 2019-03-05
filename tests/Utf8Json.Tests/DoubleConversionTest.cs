@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Collections.Generic;
 using System.Text;
+using Spreads.Buffers;
 using Spreads.Serialization.Utf8Json.Internal.DoubleConversion;
 using Xunit;
 using Spreads.Serialization.Utf8Json.Internal;
@@ -34,7 +35,7 @@ namespace Spreads.Serialization.Utf8Json.Tests
         }
 
         [Fact]
-        public void Double()
+        public unsafe void Double()
         {
             // testdatagen, https://github.com/ufcpp/UfcppSample/blob/master/Demo/2017/TypeRepositoryBenchmarks/Grisu3DoubleConversion/TestData.cs
 
@@ -59,7 +60,8 @@ namespace Spreads.Serialization.Utf8Json.Tests
                 {
                     var buf = Encoding.UTF8.GetBytes(item.ToString());
                     var buf2 = Enumerable.Range(1, 100).Select(z => (byte)z).Concat(buf).ToArray();
-                    var d2 = NumberConverter.ReadDouble(buf2, 100, out var _);
+                    var db = new DirectBuffer(buf2.Length, (byte*)buf2.AsMemory().Pin().Pointer);
+                    var d2 = NumberConverter.ReadDouble(db, 100, out var _);
                     Approximately(y, d2).IsTrue();
                 }
             }
@@ -78,7 +80,7 @@ namespace Spreads.Serialization.Utf8Json.Tests
         }
 
         [Fact]
-        public void Float()
+        public unsafe void Float()
         {
             var r = new Random();
             var n = 10000;
@@ -99,7 +101,8 @@ namespace Spreads.Serialization.Utf8Json.Tests
 
                 var buf = Encoding.UTF8.GetBytes(item.ToString());
                 var buf2 = Enumerable.Range(1, 100).Select(z => (byte)z).Concat(buf).ToArray();
-                var d2 = NumberConverter.ReadSingle(buf2, 100, out var _);
+                var db = new DirectBuffer(buf2.Length, (byte*) buf2.AsMemory().Pin().Pointer);
+                var d2 = NumberConverter.ReadSingle(db, 100, out var _);
                 Approximately(y2, d2).IsTrue();
             }
 
