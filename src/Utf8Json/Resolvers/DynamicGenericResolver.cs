@@ -324,4 +324,3 @@ namespace Spreads.Serialization.Utf8Json.Resolvers.Internal
         }
     }
 }
-

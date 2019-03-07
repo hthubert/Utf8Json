@@ -1,9 +1,8 @@
 ﻿#if NETSTANDARD
 
 using System;
-using Spreads.Serialization.Utf8Json.Internal;
-using Spreads.Serialization.Utf8Json.Formatters.Internal;
 
+#if !SPREADS
 namespace Spreads.Serialization.Utf8Json.Formatters.Internal
 {
     // reduce static constructor generate size on generics(especially IL2CPP on Unity)
@@ -151,12 +150,35 @@ namespace Spreads.Serialization.Utf8Json.Formatters.Internal
         }
     }
 }
+#endif
 
 namespace Spreads.Serialization.Utf8Json.Formatters
 {
-
     public sealed class ValueTupleFormatter<T1> : IJsonFormatter<ValueTuple<T1>>
     {
+#if SPREADS
+
+        public void Serialize(ref JsonWriter writer, ValueTuple<T1> value, IJsonFormatterResolver formatterResolver)
+        {
+            writer.WriteBeginArray();
+
+            formatterResolver.GetFormatterWithVerify<T1>().Serialize(ref writer, value.Item1, formatterResolver);
+
+            writer.WriteEndArray();
+        }
+
+        public ValueTuple<T1> Deserialize(ref JsonReader reader, IJsonFormatterResolver formatterResolver)
+        {
+            reader.ReadIsBeginArrayWithVerify();
+
+            var item1 = formatterResolver.GetFormatterWithVerify<T1>().Deserialize(ref reader, formatterResolver);
+
+            reader.ReadIsEndArrayWithVerify();
+
+            return new ValueTuple<T1>(item1);
+        }
+
+#else
         static readonly byte[][] cache = TupleFormatterHelper.nameCache1;
         static readonly AutomataDictionary dictionary = TupleFormatterHelper.dictionary1;
 
@@ -172,7 +194,7 @@ namespace Spreads.Serialization.Utf8Json.Formatters
             if (reader.ReadIsNull()) throw new InvalidOperationException("Data is Nil, ValueTuple can not be null.");
 
             T1 item1 = default(T1);
-            
+
             var count = 0;
             reader.ReadIsBeginObjectWithVerify();
             while (!reader.ReadIsEndObjectWithSkipValueSeparator(ref count))
@@ -190,19 +212,51 @@ namespace Spreads.Serialization.Utf8Json.Formatters
                     case 0:
                         item1 = formatterResolver.GetFormatterWithVerify<T1>().Deserialize(ref reader, formatterResolver);
                         break;
+
                     default:
                         reader.ReadNextBlock();
                         break;
                 }
             }
-            
+
             return new ValueTuple<T1>(item1);
         }
+#endif
     }
-
 
     public sealed class ValueTupleFormatter<T1, T2> : IJsonFormatter<ValueTuple<T1, T2>>
     {
+#if SPREADS
+
+        public void Serialize(ref JsonWriter writer, (T1, T2) value, IJsonFormatterResolver formatterResolver)
+        {
+            writer.WriteBeginArray();
+
+            formatterResolver.GetFormatterWithVerify<T1>().Serialize(ref writer, value.Item1, formatterResolver);
+
+            writer.WriteValueSeparator();
+
+            formatterResolver.GetFormatterWithVerify<T2>().Serialize(ref writer, value.Item2, formatterResolver);
+
+            writer.WriteEndArray();
+        }
+
+        public (T1, T2) Deserialize(ref JsonReader reader, IJsonFormatterResolver formatterResolver)
+        {
+            reader.ReadIsBeginArrayWithVerify();
+
+            var item1 = formatterResolver.GetFormatterWithVerify<T1>().Deserialize(ref reader, formatterResolver);
+
+            reader.ReadIsValueSeparatorWithVerify();
+
+            var item2 = formatterResolver.GetFormatterWithVerify<T2>().Deserialize(ref reader, formatterResolver);
+
+            reader.ReadIsEndArrayWithVerify();
+
+            return (item1, item2);
+        }
+
+#else
         static readonly byte[][] cache = TupleFormatterHelper.nameCache2;
         static readonly AutomataDictionary dictionary = TupleFormatterHelper.dictionary2;
 
@@ -221,7 +275,7 @@ namespace Spreads.Serialization.Utf8Json.Formatters
 
             T1 item1 = default(T1);
             T2 item2 = default(T2);
-            
+
             var count = 0;
             reader.ReadIsBeginObjectWithVerify();
             while (!reader.ReadIsEndObjectWithSkipValueSeparator(ref count))
@@ -239,22 +293,63 @@ namespace Spreads.Serialization.Utf8Json.Formatters
                     case 0:
                         item1 = formatterResolver.GetFormatterWithVerify<T1>().Deserialize(ref reader, formatterResolver);
                         break;
+
                     case 1:
                         item2 = formatterResolver.GetFormatterWithVerify<T2>().Deserialize(ref reader, formatterResolver);
                         break;
+
                     default:
                         reader.ReadNextBlock();
                         break;
                 }
             }
-            
+
             return new ValueTuple<T1, T2>(item1, item2);
         }
+#endif
     }
-
 
     public sealed class ValueTupleFormatter<T1, T2, T3> : IJsonFormatter<ValueTuple<T1, T2, T3>>
     {
+#if SPREADS
+
+        public void Serialize(ref JsonWriter writer, (T1, T2, T3) value, IJsonFormatterResolver formatterResolver)
+        {
+            writer.WriteBeginArray();
+
+            formatterResolver.GetFormatterWithVerify<T1>().Serialize(ref writer, value.Item1, formatterResolver);
+
+            writer.WriteValueSeparator();
+
+            formatterResolver.GetFormatterWithVerify<T2>().Serialize(ref writer, value.Item2, formatterResolver);
+
+            writer.WriteValueSeparator();
+
+            formatterResolver.GetFormatterWithVerify<T3>().Serialize(ref writer, value.Item3, formatterResolver);
+
+            writer.WriteEndArray();
+        }
+
+        public (T1, T2, T3) Deserialize(ref JsonReader reader, IJsonFormatterResolver formatterResolver)
+        {
+            reader.ReadIsBeginArrayWithVerify();
+
+            var item1 = formatterResolver.GetFormatterWithVerify<T1>().Deserialize(ref reader, formatterResolver);
+
+            reader.ReadIsValueSeparatorWithVerify();
+
+            var item2 = formatterResolver.GetFormatterWithVerify<T2>().Deserialize(ref reader, formatterResolver);
+
+            reader.ReadIsValueSeparatorWithVerify();
+
+            var item3 = formatterResolver.GetFormatterWithVerify<T3>().Deserialize(ref reader, formatterResolver);
+
+            reader.ReadIsEndArrayWithVerify();
+
+            return (item1, item2, item3);
+        }
+
+#else
         static readonly byte[][] cache = TupleFormatterHelper.nameCache3;
         static readonly AutomataDictionary dictionary = TupleFormatterHelper.dictionary3;
 
@@ -276,7 +371,7 @@ namespace Spreads.Serialization.Utf8Json.Formatters
             T1 item1 = default(T1);
             T2 item2 = default(T2);
             T3 item3 = default(T3);
-            
+
             var count = 0;
             reader.ReadIsBeginObjectWithVerify();
             while (!reader.ReadIsEndObjectWithSkipValueSeparator(ref count))
@@ -294,25 +389,75 @@ namespace Spreads.Serialization.Utf8Json.Formatters
                     case 0:
                         item1 = formatterResolver.GetFormatterWithVerify<T1>().Deserialize(ref reader, formatterResolver);
                         break;
+
                     case 1:
                         item2 = formatterResolver.GetFormatterWithVerify<T2>().Deserialize(ref reader, formatterResolver);
                         break;
+
                     case 2:
                         item3 = formatterResolver.GetFormatterWithVerify<T3>().Deserialize(ref reader, formatterResolver);
                         break;
+
                     default:
                         reader.ReadNextBlock();
                         break;
                 }
             }
-            
+
             return new ValueTuple<T1, T2, T3>(item1, item2, item3);
         }
+#endif
     }
-
 
     public sealed class ValueTupleFormatter<T1, T2, T3, T4> : IJsonFormatter<ValueTuple<T1, T2, T3, T4>>
     {
+#if SPREADS
+
+        public void Serialize(ref JsonWriter writer, (T1, T2, T3, T4) value, IJsonFormatterResolver formatterResolver)
+        {
+            writer.WriteBeginArray();
+
+            formatterResolver.GetFormatterWithVerify<T1>().Serialize(ref writer, value.Item1, formatterResolver);
+
+            writer.WriteValueSeparator();
+
+            formatterResolver.GetFormatterWithVerify<T2>().Serialize(ref writer, value.Item2, formatterResolver);
+
+            writer.WriteValueSeparator();
+
+            formatterResolver.GetFormatterWithVerify<T3>().Serialize(ref writer, value.Item3, formatterResolver);
+
+            writer.WriteValueSeparator();
+
+            formatterResolver.GetFormatterWithVerify<T4>().Serialize(ref writer, value.Item4, formatterResolver);
+
+            writer.WriteEndArray();
+        }
+
+        public (T1, T2, T3, T4) Deserialize(ref JsonReader reader, IJsonFormatterResolver formatterResolver)
+        {
+            reader.ReadIsBeginArrayWithVerify();
+
+            var item1 = formatterResolver.GetFormatterWithVerify<T1>().Deserialize(ref reader, formatterResolver);
+
+            reader.ReadIsValueSeparatorWithVerify();
+
+            var item2 = formatterResolver.GetFormatterWithVerify<T2>().Deserialize(ref reader, formatterResolver);
+
+            reader.ReadIsValueSeparatorWithVerify();
+
+            var item3 = formatterResolver.GetFormatterWithVerify<T3>().Deserialize(ref reader, formatterResolver);
+
+            reader.ReadIsValueSeparatorWithVerify();
+
+            var item4 = formatterResolver.GetFormatterWithVerify<T4>().Deserialize(ref reader, formatterResolver);
+
+            reader.ReadIsEndArrayWithVerify();
+
+            return (item1, item2, item3, item4);
+        }
+
+#else
         static readonly byte[][] cache = TupleFormatterHelper.nameCache4;
         static readonly AutomataDictionary dictionary = TupleFormatterHelper.dictionary4;
 
@@ -337,7 +482,7 @@ namespace Spreads.Serialization.Utf8Json.Formatters
             T2 item2 = default(T2);
             T3 item3 = default(T3);
             T4 item4 = default(T4);
-            
+
             var count = 0;
             reader.ReadIsBeginObjectWithVerify();
             while (!reader.ReadIsEndObjectWithSkipValueSeparator(ref count))
@@ -355,28 +500,87 @@ namespace Spreads.Serialization.Utf8Json.Formatters
                     case 0:
                         item1 = formatterResolver.GetFormatterWithVerify<T1>().Deserialize(ref reader, formatterResolver);
                         break;
+
                     case 1:
                         item2 = formatterResolver.GetFormatterWithVerify<T2>().Deserialize(ref reader, formatterResolver);
                         break;
+
                     case 2:
                         item3 = formatterResolver.GetFormatterWithVerify<T3>().Deserialize(ref reader, formatterResolver);
                         break;
+
                     case 3:
                         item4 = formatterResolver.GetFormatterWithVerify<T4>().Deserialize(ref reader, formatterResolver);
                         break;
+
                     default:
                         reader.ReadNextBlock();
                         break;
                 }
             }
-            
+
             return new ValueTuple<T1, T2, T3, T4>(item1, item2, item3, item4);
         }
+#endif
     }
-
 
     public sealed class ValueTupleFormatter<T1, T2, T3, T4, T5> : IJsonFormatter<ValueTuple<T1, T2, T3, T4, T5>>
     {
+#if SPREADS
+
+        public void Serialize(ref JsonWriter writer, (T1, T2, T3, T4, T5) value, IJsonFormatterResolver formatterResolver)
+        {
+            writer.WriteBeginArray();
+
+            formatterResolver.GetFormatterWithVerify<T1>().Serialize(ref writer, value.Item1, formatterResolver);
+
+            writer.WriteValueSeparator();
+
+            formatterResolver.GetFormatterWithVerify<T2>().Serialize(ref writer, value.Item2, formatterResolver);
+
+            writer.WriteValueSeparator();
+
+            formatterResolver.GetFormatterWithVerify<T3>().Serialize(ref writer, value.Item3, formatterResolver);
+
+            writer.WriteValueSeparator();
+
+            formatterResolver.GetFormatterWithVerify<T4>().Serialize(ref writer, value.Item4, formatterResolver);
+
+            writer.WriteValueSeparator();
+
+            formatterResolver.GetFormatterWithVerify<T5>().Serialize(ref writer, value.Item5, formatterResolver);
+
+            writer.WriteEndArray();
+        }
+
+        public (T1, T2, T3, T4, T5) Deserialize(ref JsonReader reader, IJsonFormatterResolver formatterResolver)
+        {
+            reader.ReadIsBeginArrayWithVerify();
+
+            var item1 = formatterResolver.GetFormatterWithVerify<T1>().Deserialize(ref reader, formatterResolver);
+
+            reader.ReadIsValueSeparatorWithVerify();
+
+            var item2 = formatterResolver.GetFormatterWithVerify<T2>().Deserialize(ref reader, formatterResolver);
+
+            reader.ReadIsValueSeparatorWithVerify();
+
+            var item3 = formatterResolver.GetFormatterWithVerify<T3>().Deserialize(ref reader, formatterResolver);
+
+            reader.ReadIsValueSeparatorWithVerify();
+
+            var item4 = formatterResolver.GetFormatterWithVerify<T4>().Deserialize(ref reader, formatterResolver);
+
+            reader.ReadIsValueSeparatorWithVerify();
+
+            var item5 = formatterResolver.GetFormatterWithVerify<T5>().Deserialize(ref reader, formatterResolver);
+
+            reader.ReadIsEndArrayWithVerify();
+
+            return (item1, item2, item3, item4, item5);
+        }
+
+#else
         static readonly byte[][] cache = TupleFormatterHelper.nameCache5;
         static readonly AutomataDictionary dictionary = TupleFormatterHelper.dictionary5;
 
@@ -404,7 +608,7 @@ namespace Spreads.Serialization.Utf8Json.Formatters
             T3 item3 = default(T3);
             T4 item4 = default(T4);
             T5 item5 = default(T5);
-            
+
             var count = 0;
             reader.ReadIsBeginObjectWithVerify();
             while (!reader.ReadIsEndObjectWithSkipValueSeparator(ref count))
@@ -422,31 +626,99 @@ namespace Spreads.Serialization.Utf8Json.Formatters
                     case 0:
                         item1 = formatterResolver.GetFormatterWithVerify<T1>().Deserialize(ref reader, formatterResolver);
                         break;
+
                     case 1:
                         item2 = formatterResolver.GetFormatterWithVerify<T2>().Deserialize(ref reader, formatterResolver);
                         break;
+
                     case 2:
                         item3 = formatterResolver.GetFormatterWithVerify<T3>().Deserialize(ref reader, formatterResolver);
                         break;
+
                     case 3:
                         item4 = formatterResolver.GetFormatterWithVerify<T4>().Deserialize(ref reader, formatterResolver);
                         break;
+
                     case 4:
                         item5 = formatterResolver.GetFormatterWithVerify<T5>().Deserialize(ref reader, formatterResolver);
                         break;
+
                     default:
                         reader.ReadNextBlock();
                         break;
                 }
             }
-            
+
             return new ValueTuple<T1, T2, T3, T4, T5>(item1, item2, item3, item4, item5);
         }
+#endif
     }
-
 
     public sealed class ValueTupleFormatter<T1, T2, T3, T4, T5, T6> : IJsonFormatter<ValueTuple<T1, T2, T3, T4, T5, T6>>
     {
+#if SPREADS
+
+        public void Serialize(ref JsonWriter writer, (T1, T2, T3, T4, T5, T6) value, IJsonFormatterResolver formatterResolver)
+        {
+            writer.WriteBeginArray();
+
+            formatterResolver.GetFormatterWithVerify<T1>().Serialize(ref writer, value.Item1, formatterResolver);
+
+            writer.WriteValueSeparator();
+
+            formatterResolver.GetFormatterWithVerify<T2>().Serialize(ref writer, value.Item2, formatterResolver);
+
+            writer.WriteValueSeparator();
+
+            formatterResolver.GetFormatterWithVerify<T3>().Serialize(ref writer, value.Item3, formatterResolver);
+
+            writer.WriteValueSeparator();
+
+            formatterResolver.GetFormatterWithVerify<T4>().Serialize(ref writer, value.Item4, formatterResolver);
+
+            writer.WriteValueSeparator();
+
+            formatterResolver.GetFormatterWithVerify<T5>().Serialize(ref writer, value.Item5, formatterResolver);
+
+            writer.WriteValueSeparator();
+
+            formatterResolver.GetFormatterWithVerify<T6>().Serialize(ref writer, value.Item6, formatterResolver);
+
+            writer.WriteEndArray();
+        }
+
+        public (T1, T2, T3, T4, T5, T6) Deserialize(ref JsonReader reader, IJsonFormatterResolver formatterResolver)
+        {
+            reader.ReadIsBeginArrayWithVerify();
+
+            var item1 = formatterResolver.GetFormatterWithVerify<T1>().Deserialize(ref reader, formatterResolver);
+
+            reader.ReadIsValueSeparatorWithVerify();
+
+            var item2 = formatterResolver.GetFormatterWithVerify<T2>().Deserialize(ref reader, formatterResolver);
+
+            reader.ReadIsValueSeparatorWithVerify();
+
+            var item3 = formatterResolver.GetFormatterWithVerify<T3>().Deserialize(ref reader, formatterResolver);
+
+            reader.ReadIsValueSeparatorWithVerify();
+
+            var item4 = formatterResolver.GetFormatterWithVerify<T4>().Deserialize(ref reader, formatterResolver);
+
+            reader.ReadIsValueSeparatorWithVerify();
+
+            var item5 = formatterResolver.GetFormatterWithVerify<T5>().Deserialize(ref reader, formatterResolver);
+
+            reader.ReadIsValueSeparatorWithVerify();
+
+            var item6 = formatterResolver.GetFormatterWithVerify<T6>().Deserialize(ref reader, formatterResolver);
+
+            reader.ReadIsEndArrayWithVerify();
+
+            return (item1, item2, item3, item4, item5, item6);
+        }
+
+#else
         static readonly byte[][] cache = TupleFormatterHelper.nameCache6;
         static readonly AutomataDictionary dictionary = TupleFormatterHelper.dictionary6;
 
@@ -477,7 +749,7 @@ namespace Spreads.Serialization.Utf8Json.Formatters
             T4 item4 = default(T4);
             T5 item5 = default(T5);
             T6 item6 = default(T6);
-            
+
             var count = 0;
             reader.ReadIsBeginObjectWithVerify();
             while (!reader.ReadIsEndObjectWithSkipValueSeparator(ref count))
@@ -495,34 +767,111 @@ namespace Spreads.Serialization.Utf8Json.Formatters
                     case 0:
                         item1 = formatterResolver.GetFormatterWithVerify<T1>().Deserialize(ref reader, formatterResolver);
                         break;
+
                     case 1:
                         item2 = formatterResolver.GetFormatterWithVerify<T2>().Deserialize(ref reader, formatterResolver);
                         break;
+
                     case 2:
                         item3 = formatterResolver.GetFormatterWithVerify<T3>().Deserialize(ref reader, formatterResolver);
                         break;
+
                     case 3:
                         item4 = formatterResolver.GetFormatterWithVerify<T4>().Deserialize(ref reader, formatterResolver);
                         break;
+
                     case 4:
                         item5 = formatterResolver.GetFormatterWithVerify<T5>().Deserialize(ref reader, formatterResolver);
                         break;
+
                     case 5:
                         item6 = formatterResolver.GetFormatterWithVerify<T6>().Deserialize(ref reader, formatterResolver);
                         break;
+
                     default:
                         reader.ReadNextBlock();
                         break;
                 }
             }
-            
+
             return new ValueTuple<T1, T2, T3, T4, T5, T6>(item1, item2, item3, item4, item5, item6);
         }
+#endif
     }
-
 
     public sealed class ValueTupleFormatter<T1, T2, T3, T4, T5, T6, T7> : IJsonFormatter<ValueTuple<T1, T2, T3, T4, T5, T6, T7>>
     {
+#if SPREADS
+
+        public void Serialize(ref JsonWriter writer, (T1, T2, T3, T4, T5, T6, T7) value, IJsonFormatterResolver formatterResolver)
+        {
+            writer.WriteBeginArray();
+
+            formatterResolver.GetFormatterWithVerify<T1>().Serialize(ref writer, value.Item1, formatterResolver);
+
+            writer.WriteValueSeparator();
+
+            formatterResolver.GetFormatterWithVerify<T2>().Serialize(ref writer, value.Item2, formatterResolver);
+
+            writer.WriteValueSeparator();
+
+            formatterResolver.GetFormatterWithVerify<T3>().Serialize(ref writer, value.Item3, formatterResolver);
+
+            writer.WriteValueSeparator();
+
+            formatterResolver.GetFormatterWithVerify<T4>().Serialize(ref writer, value.Item4, formatterResolver);
+
+            writer.WriteValueSeparator();
+
+            formatterResolver.GetFormatterWithVerify<T5>().Serialize(ref writer, value.Item5, formatterResolver);
+
+            writer.WriteValueSeparator();
+
+            formatterResolver.GetFormatterWithVerify<T6>().Serialize(ref writer, value.Item6, formatterResolver);
+
+            writer.WriteValueSeparator();
+
+            formatterResolver.GetFormatterWithVerify<T7>().Serialize(ref writer, value.Item7, formatterResolver);
+
+            writer.WriteEndArray();
+        }
+
+        public (T1, T2, T3, T4, T5, T6, T7) Deserialize(ref JsonReader reader, IJsonFormatterResolver formatterResolver)
+        {
+            reader.ReadIsBeginArrayWithVerify();
+
+            var item1 = formatterResolver.GetFormatterWithVerify<T1>().Deserialize(ref reader, formatterResolver);
+
+            reader.ReadIsValueSeparatorWithVerify();
+
+            var item2 = formatterResolver.GetFormatterWithVerify<T2>().Deserialize(ref reader, formatterResolver);
+
+            reader.ReadIsValueSeparatorWithVerify();
+
+            var item3 = formatterResolver.GetFormatterWithVerify<T3>().Deserialize(ref reader, formatterResolver);
+
+            reader.ReadIsValueSeparatorWithVerify();
+
+            var item4 = formatterResolver.GetFormatterWithVerify<T4>().Deserialize(ref reader, formatterResolver);
+
+            reader.ReadIsValueSeparatorWithVerify();
+
+            var item5 = formatterResolver.GetFormatterWithVerify<T5>().Deserialize(ref reader, formatterResolver);
+
+            reader.ReadIsValueSeparatorWithVerify();
+
+            var item6 = formatterResolver.GetFormatterWithVerify<T6>().Deserialize(ref reader, formatterResolver);
+
+            reader.ReadIsValueSeparatorWithVerify();
+
+            var item7 = formatterResolver.GetFormatterWithVerify<T7>().Deserialize(ref reader, formatterResolver);
+
+            reader.ReadIsEndArrayWithVerify();
+
+            return (item1, item2, item3, item4, item5, item6, item7);
+        }
+
+#else
         static readonly byte[][] cache = TupleFormatterHelper.nameCache7;
         static readonly AutomataDictionary dictionary = TupleFormatterHelper.dictionary7;
 
@@ -556,7 +905,7 @@ namespace Spreads.Serialization.Utf8Json.Formatters
             T5 item5 = default(T5);
             T6 item6 = default(T6);
             T7 item7 = default(T7);
-            
+
             var count = 0;
             reader.ReadIsBeginObjectWithVerify();
             while (!reader.ReadIsEndObjectWithSkipValueSeparator(ref count))
@@ -574,37 +923,123 @@ namespace Spreads.Serialization.Utf8Json.Formatters
                     case 0:
                         item1 = formatterResolver.GetFormatterWithVerify<T1>().Deserialize(ref reader, formatterResolver);
                         break;
+
                     case 1:
                         item2 = formatterResolver.GetFormatterWithVerify<T2>().Deserialize(ref reader, formatterResolver);
                         break;
+
                     case 2:
                         item3 = formatterResolver.GetFormatterWithVerify<T3>().Deserialize(ref reader, formatterResolver);
                         break;
+
                     case 3:
                         item4 = formatterResolver.GetFormatterWithVerify<T4>().Deserialize(ref reader, formatterResolver);
                         break;
+
                     case 4:
                         item5 = formatterResolver.GetFormatterWithVerify<T5>().Deserialize(ref reader, formatterResolver);
                         break;
+
                     case 5:
                         item6 = formatterResolver.GetFormatterWithVerify<T6>().Deserialize(ref reader, formatterResolver);
                         break;
+
                     case 6:
                         item7 = formatterResolver.GetFormatterWithVerify<T7>().Deserialize(ref reader, formatterResolver);
                         break;
+
                     default:
                         reader.ReadNextBlock();
                         break;
                 }
             }
-            
+
             return new ValueTuple<T1, T2, T3, T4, T5, T6, T7>(item1, item2, item3, item4, item5, item6, item7);
         }
+#endif
     }
-
 
     public sealed class ValueTupleFormatter<T1, T2, T3, T4, T5, T6, T7, TRest> : IJsonFormatter<ValueTuple<T1, T2, T3, T4, T5, T6, T7, TRest>> where TRest : struct
     {
+#if SPREADS
+
+        public void Serialize(ref JsonWriter writer, ValueTuple<T1, T2, T3, T4, T5, T6, T7, TRest> value, IJsonFormatterResolver formatterResolver)
+        {
+            writer.WriteBeginArray();
+
+            formatterResolver.GetFormatterWithVerify<T1>().Serialize(ref writer, value.Item1, formatterResolver);
+
+            writer.WriteValueSeparator();
+
+            formatterResolver.GetFormatterWithVerify<T2>().Serialize(ref writer, value.Item2, formatterResolver);
+
+            writer.WriteValueSeparator();
+
+            formatterResolver.GetFormatterWithVerify<T3>().Serialize(ref writer, value.Item3, formatterResolver);
+
+            writer.WriteValueSeparator();
+
+            formatterResolver.GetFormatterWithVerify<T4>().Serialize(ref writer, value.Item4, formatterResolver);
+
+            writer.WriteValueSeparator();
+
+            formatterResolver.GetFormatterWithVerify<T5>().Serialize(ref writer, value.Item5, formatterResolver);
+
+            writer.WriteValueSeparator();
+
+            formatterResolver.GetFormatterWithVerify<T6>().Serialize(ref writer, value.Item6, formatterResolver);
+
+            writer.WriteValueSeparator();
+
+            formatterResolver.GetFormatterWithVerify<T7>().Serialize(ref writer, value.Item7, formatterResolver);
+
+            writer.WriteValueSeparator();
+
+            formatterResolver.GetFormatterWithVerify<TRest>().Serialize(ref writer, value.Rest, formatterResolver);
+
+            writer.WriteEndArray();
+        }
+
+        public ValueTuple<T1, T2, T3, T4, T5, T6, T7, TRest> Deserialize(ref JsonReader reader, IJsonFormatterResolver formatterResolver)
+        {
+            reader.ReadIsBeginArrayWithVerify();
+
+            var item1 = formatterResolver.GetFormatterWithVerify<T1>().Deserialize(ref reader, formatterResolver);
+
+            reader.ReadIsValueSeparatorWithVerify();
+
+            var item2 = formatterResolver.GetFormatterWithVerify<T2>().Deserialize(ref reader, formatterResolver);
+
+            reader.ReadIsValueSeparatorWithVerify();
+
+            var item3 = formatterResolver.GetFormatterWithVerify<T3>().Deserialize(ref reader, formatterResolver);
+
+            reader.ReadIsValueSeparatorWithVerify();
+
+            var item4 = formatterResolver.GetFormatterWithVerify<T4>().Deserialize(ref reader, formatterResolver);
+
+            reader.ReadIsValueSeparatorWithVerify();
+
+            var item5 = formatterResolver.GetFormatterWithVerify<T5>().Deserialize(ref reader, formatterResolver);
+
+            reader.ReadIsValueSeparatorWithVerify();
+
+            var item6 = formatterResolver.GetFormatterWithVerify<T6>().Deserialize(ref reader, formatterResolver);
+
+            reader.ReadIsValueSeparatorWithVerify();
+
+            var item7 = formatterResolver.GetFormatterWithVerify<T7>().Deserialize(ref reader, formatterResolver);
+
+            reader.ReadIsValueSeparatorWithVerify();
+
+            var item8 = formatterResolver.GetFormatterWithVerify<TRest>().Deserialize(ref reader, formatterResolver);
+
+            reader.ReadIsEndArrayWithVerify();
+
+            return new ValueTuple<T1, T2, T3, T4, T5, T6, T7, TRest>(item1, item2, item3, item4, item5, item6, item7, item8);
+        }
+
+#else
         static readonly byte[][] cache = TupleFormatterHelper.nameCache8;
         static readonly AutomataDictionary dictionary = TupleFormatterHelper.dictionary8;
 
@@ -641,7 +1076,7 @@ namespace Spreads.Serialization.Utf8Json.Formatters
             T6 item6 = default(T6);
             T7 item7 = default(T7);
             TRest item8 = default(TRest);
-            
+
             var count = 0;
             reader.ReadIsBeginObjectWithVerify();
             while (!reader.ReadIsEndObjectWithSkipValueSeparator(ref count))
@@ -659,37 +1094,45 @@ namespace Spreads.Serialization.Utf8Json.Formatters
                     case 0:
                         item1 = formatterResolver.GetFormatterWithVerify<T1>().Deserialize(ref reader, formatterResolver);
                         break;
+
                     case 1:
                         item2 = formatterResolver.GetFormatterWithVerify<T2>().Deserialize(ref reader, formatterResolver);
                         break;
+
                     case 2:
                         item3 = formatterResolver.GetFormatterWithVerify<T3>().Deserialize(ref reader, formatterResolver);
                         break;
+
                     case 3:
                         item4 = formatterResolver.GetFormatterWithVerify<T4>().Deserialize(ref reader, formatterResolver);
                         break;
+
                     case 4:
                         item5 = formatterResolver.GetFormatterWithVerify<T5>().Deserialize(ref reader, formatterResolver);
                         break;
+
                     case 5:
                         item6 = formatterResolver.GetFormatterWithVerify<T6>().Deserialize(ref reader, formatterResolver);
                         break;
+
                     case 6:
                         item7 = formatterResolver.GetFormatterWithVerify<T7>().Deserialize(ref reader, formatterResolver);
                         break;
+
                     case 7:
                         item8 = formatterResolver.GetFormatterWithVerify<TRest>().Deserialize(ref reader, formatterResolver);
                         break;
+
                     default:
                         reader.ReadNextBlock();
                         break;
                 }
             }
-            
+
             return new ValueTuple<T1, T2, T3, T4, T5, T6, T7, TRest>(item1, item2, item3, item4, item5, item6, item7, item8);
         }
+#endif
     }
-
 }
 
 #endif

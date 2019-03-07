@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Text;
-using Spreads.Serialization.Utf8Json.Formatters.Internal;
 using Spreads.Serialization.Utf8Json.Internal;
 using System.Text.RegularExpressions;
 using Spreads.Buffers;
@@ -402,16 +401,41 @@ namespace Spreads.Serialization.Utf8Json.Formatters
     {
         public void Serialize(ref JsonWriter writer, KeyValuePair<TKey, TValue> value, IJsonFormatterResolver formatterResolver)
         {
+#if SPREADS
+            writer.WriteBeginArray();
+
+            formatterResolver.GetFormatterWithVerify<TKey>().Serialize(ref writer, value.Key, formatterResolver);
+
+            writer.WriteValueSeparator();
+
+            formatterResolver.GetFormatterWithVerify<TValue>().Serialize(ref writer, value.Value, formatterResolver);
+
+            writer.WriteEndArray();
+#else
             writer.WriteRaw(StandardClassLibraryFormatterHelper.keyValuePairName[0]);
             formatterResolver.GetFormatterWithVerify<TKey>().Serialize(ref writer, value.Key, formatterResolver);
             writer.WriteRaw(StandardClassLibraryFormatterHelper.keyValuePairName[1]);
             formatterResolver.GetFormatterWithVerify<TValue>().Serialize(ref writer, value.Value, formatterResolver);
 
             writer.WriteEndObject();
+#endif
         }
 
         public KeyValuePair<TKey, TValue> Deserialize(ref JsonReader reader, IJsonFormatterResolver formatterResolver)
         {
+#if SPREADS
+            reader.ReadIsBeginArrayWithVerify();
+
+            var key = formatterResolver.GetFormatterWithVerify<TKey>().Deserialize(ref reader, formatterResolver);
+
+            reader.ReadIsValueSeparatorWithVerify();
+
+            var value = formatterResolver.GetFormatterWithVerify<TValue>().Deserialize(ref reader, formatterResolver);
+
+            reader.ReadIsEndArrayWithVerify();
+
+            return new KeyValuePair<TKey, TValue>(key, value);
+#else
             if (reader.ReadIsNull()) throw new InvalidOperationException("Data is Nil, KeyValuePair can not be null.");
 
             TKey resultKey = default(TKey);
@@ -447,6 +471,7 @@ namespace Spreads.Serialization.Utf8Json.Formatters
             }
 
             return new KeyValuePair<TKey, TValue>(resultKey, resultValue);
+#endif
         }
     }
 
