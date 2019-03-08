@@ -68,17 +68,17 @@ namespace Spreads.Serialization.Utf8Json.Resolvers.Internal
 
         static class FormatterCache<T>
         {
-            public static readonly IJsonFormatter<T> formatter;
+            public static readonly IJsonFormatter<T> formatter = GetFormatter();
 
-            static FormatterCache()
+            static IJsonFormatter<T> GetFormatter()
             {
                 if (typeof(T) == typeof(object))
                 {
-                    formatter = (IJsonFormatter<T>)fallbackFormatter;
+                    return (IJsonFormatter<T>)fallbackFormatter;
                 }
                 else
                 {
-                    formatter = InnerResolver.Instance.GetFormatter<T>();
+                    return InnerResolver.Instance.GetFormatter<T>();
                 }
             }
         }
@@ -100,19 +100,20 @@ namespace Spreads.Serialization.Utf8Json.Resolvers.Internal
 
             static class FormatterCache<T>
             {
-                public static readonly IJsonFormatter<T> formatter;
+                public static readonly IJsonFormatter<T> formatter = GetFormatter();
 
-                static FormatterCache()
+                static IJsonFormatter<T> GetFormatter()
                 {
                     foreach (var item in resolvers)
                     {
                         var f = item.GetFormatter<T>();
                         if (f != null)
                         {
-                            formatter = f;
-                            return;
+                            return f;
                         }
                     }
+
+                    return null;
                 }
             }
         }

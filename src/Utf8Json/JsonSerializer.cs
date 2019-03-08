@@ -112,6 +112,7 @@ namespace Spreads.Serialization.Utf8Json
                 ThrowHelper.ThrowInvalidOperationException();
             }
             var resolver = DefaultResolver;
+
             var buffer = BufferPool<byte>.Rent(bufferSize);
             var writer = new JsonWriter(buffer, offset);
             var formatter = resolver.GetFormatterWithVerify<T>();
@@ -129,7 +130,7 @@ namespace Spreads.Serialization.Utf8Json
         internal static RetainedMemory<byte> SerializeToRetainedMemory<T>(T value, int offset = 0)
         {
             var segment = SerializeToRentedBuffer(value, offset);
-            var arrayMemory = ArrayMemory<byte>.Create(segment.Array, segment.Offset - offset, segment.Count + offset, false, true);
+            var arrayMemory = ArrayMemory<byte>.Create(segment.Array, segment.Offset - offset, segment.Count + offset, externallyOwned: false, pin:false);
             return arrayMemory.Retain();
         }
 

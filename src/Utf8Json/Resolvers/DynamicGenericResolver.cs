@@ -33,11 +33,11 @@ namespace Spreads.Serialization.Utf8Json.Resolvers
 
         static class FormatterCache<T>
         {
-            public static readonly IJsonFormatter<T> formatter;
+            public static readonly IJsonFormatter<T> formatter = GetFormatter();
 
-            static FormatterCache()
+            static IJsonFormatter<T> GetFormatter()
             {
-                formatter = (IJsonFormatter<T>)DynamicGenericResolverGetFormatterHelper.GetFormatter(typeof(T));
+                return (IJsonFormatter<T>)DynamicGenericResolverGetFormatterHelper.GetFormatter(typeof(T));
             }
         }
     }

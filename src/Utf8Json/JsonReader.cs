@@ -36,7 +36,6 @@ namespace Spreads.Serialization.Utf8Json
         private readonly int _length;
         private int offset;
 
-
 #if !SPREADS
         [Obsolete("For tests only. It pins the array and never releases it.")]
         public static JsonReader FromArray(byte[] bytes, int offset = 0)
@@ -427,7 +426,10 @@ namespace Spreads.Serialization.Utf8Json
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void ReadIsBeginArrayWithVerify()
         {
-            if (!ReadIsBeginArray()) CreateParsingException("[");
+            if (!ReadIsBeginArray())
+            {
+                CreateParsingException("[");
+            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -447,7 +449,10 @@ namespace Spreads.Serialization.Utf8Json
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void ReadIsEndArrayWithVerify()
         {
-            if (!ReadIsEndArray()) CreateParsingException("]");
+            if (!ReadIsEndArray())
+            {
+                CreateParsingException("]");
+            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1487,37 +1492,6 @@ namespace Spreads.Serialization.Utf8Json
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 get => ref _codePointStringBuffer;
             }
-
-            //[MethodImpl(MethodImplOptions.AggressiveInlining)]
-            //public static ref OffHeapBuffer<char> GetCodePointStringBufferPtr()
-            //{
-            //    return ref codePointStringBufferPtr;
-            //}
-
-            //[ThreadStatic]
-            //static byte[] buffer;
-
-            //[ThreadStatic]
-            //static char[] codePointStringBuffer;
-
-            //[MethodImpl(MethodImplOptions.AggressiveInlining)]
-            //public static byte[] GetBuffer()
-            //{
-            //    if (buffer == null)
-            //    {
-            //        buffer = new byte[65535];
-            //    }
-            //    return buffer;
-            //}
-            //[MethodImpl(MethodImplOptions.AggressiveInlining)]
-            //public static char[] GetCodePointStringBuffer()
-            //{
-            //    if (codePointStringBuffer == null)
-            //    {
-            //        codePointStringBuffer = new char[65535];
-            //    }
-            //    return codePointStringBuffer;
-            //}
         }
     }
 

@@ -23,12 +23,12 @@ namespace Spreads.Serialization.Utf8Json.Resolvers
 
         static class FormatterCache<T>
         {
-            public static readonly IJsonFormatter<T> formatter;
+            public static readonly IJsonFormatter<T> formatter = GetFormatter();
 
-            static FormatterCache()
+            static IJsonFormatter<T>  GetFormatter()
             {
                 // Reduce IL2CPP code generate size(don't write long code in <T>)
-                formatter = (IJsonFormatter<T>)BuiltinResolverGetFormatterHelper.GetFormatter(typeof(T));
+                return (IJsonFormatter<T>)BuiltinResolverGetFormatterHelper.GetFormatter(typeof(T));
             }
         }
 
