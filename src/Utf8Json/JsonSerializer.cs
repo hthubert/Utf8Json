@@ -130,7 +130,7 @@ namespace Spreads.Serialization.Utf8Json
         internal static RetainedMemory<byte> SerializeToRetainedMemory<T>(T value, int offset = 0)
         {
             var segment = SerializeToRentedBuffer(value, offset);
-            var arrayMemory = ArrayMemory<byte>.Create(segment.Array, segment.Offset - offset, segment.Count + offset, externallyOwned: false, pin:false);
+            var arrayMemory = ArrayMemory<byte>.Create(segment.Array, segment.Offset - offset, segment.Count + offset, externallyOwned: false, pin: false);
             return arrayMemory.Retain();
         }
 
@@ -324,12 +324,13 @@ namespace Spreads.Serialization.Utf8Json
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static T Deserialize<T>(byte[] bytes, int offset, IJsonFormatterResolver resolver)
+        public static unsafe T Deserialize<T>(byte[] bytes, int offset, IJsonFormatterResolver resolver)
         {
             if (resolver == null) resolver = DefaultResolver;
 
-            using (bytes.AsDirectBuffer(out var directBuffer))
+            fixed (byte* ptr = &bytes[0])
             {
+                var directBuffer = new DirectBuffer(bytes.Length, ptr);
                 var reader = new JsonReader(directBuffer);
                 var formatter = resolver.GetFormatterWithVerify<T>();
                 return formatter.Deserialize(ref reader, resolver);
@@ -415,7 +416,6 @@ namespace Spreads.Serialization.Utf8Json
                 }
             }
         }
-
 
         public static System.Threading.Tasks.Task<T> DeserializeAsync<T>(Stream stream)
         {
