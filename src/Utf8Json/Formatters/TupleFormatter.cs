@@ -1,6 +1,7 @@
 ﻿#if NETSTANDARD
 
 using System;
+using System.Reflection;
 
 #if !SPREADS
 namespace Spreads.Serialization.Utf8Json.Formatters.Internal
@@ -312,6 +313,40 @@ namespace Spreads.Serialization.Utf8Json.Formatters
         }
 #endif
     }
+
+#if SPREADS
+
+    internal static class InterfaceTuple2SerializerFactory
+    {
+        public static InterfaceTupleFormatter<T1, T2, TImpl> GenericCreate<T1, T2, TImpl>()
+            where TImpl : struct, Serializers.ITuple<T1, T2, TImpl>
+        {
+            return new InterfaceTupleFormatter<T1, T2, TImpl>();
+        }
+
+        public static object Create(Type type1, Type type2, Type typeImpl)
+        {
+            var method = typeof(InterfaceTuple2SerializerFactory).GetTypeInfo().GetMethod(nameof(GenericCreate));
+            var generic = method?.MakeGenericMethod(type1, type2, typeImpl);
+            return generic?.Invoke(null, null);
+        }
+    }
+
+    internal sealed class InterfaceTupleFormatter<T1, T2, TImpl> : IJsonFormatter<TImpl> where TImpl : struct, Serializers.ITuple<T1, T2, TImpl>
+    {
+        public void Serialize(ref JsonWriter writer, TImpl value, IJsonFormatterResolver formatterResolver)
+        {
+            formatterResolver.GetFormatterWithVerify<(T1, T2)>().Serialize(ref writer, value.ToTuple(), formatterResolver);
+        }
+
+        public TImpl Deserialize(ref JsonReader reader, IJsonFormatterResolver formatterResolver)
+        {
+            var tuple = formatterResolver.GetFormatterWithVerify<(T1, T2)>().Deserialize(ref reader, formatterResolver);
+            return default(TImpl).FromTuple(tuple);
+        }
+    }
+
+#endif
 
     public sealed class TupleFormatter<T1, T2, T3> : IJsonFormatter<Tuple<T1, T2, T3>>
     {

@@ -13,6 +13,7 @@ using Spreads.DataTypes;
 #endif
 #if NETSTANDARD
 using System.Threading.Tasks;
+// ReSharper disable RedundantIfElseBlock
 #endif
 
 namespace Spreads.Serialization.Utf8Json.Resolvers
@@ -138,6 +139,21 @@ namespace Spreads.Serialization.Utf8Json.Resolvers.Internal
                 else if (genericType == typeof(VectorStorage<>))
                 {
                     return CreateInstance(typeof(VectorStorageFormatter<>), ti.GenericTypeArguments);
+                }
+                else if (genericType.IsValueType &&
+                         genericType.GetTypeInfo().GetInterfaces()
+                        .Any(i => i.IsGenericType
+                                  && i.GetGenericTypeDefinition() == typeof(Serializers.ITuple<,,>)
+                                  && i.GetGenericArguments().Last() == genericType
+                        ))
+                {
+                    var iTy = ti.GetTypeInfo().GetInterfaces()
+                        .First(i => i.IsGenericType
+                                    && i.GetGenericTypeDefinition() == typeof(Serializers.ITuple<,,>)
+                                    && i.GetGenericArguments().Last() == ti
+                        );
+                    var gArgs = iTy.GetGenericArguments();
+                    return InterfaceTuple2SerializerFactory.Create(gArgs[0], gArgs[1], gArgs[2]);
                 }
 #endif
 
